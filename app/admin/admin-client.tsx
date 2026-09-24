@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export default function AdminClient() {
   const [data, setData] = useState<any>(null);
-  useEffect(() => { fetch('/api/auction').then(r => r.json()).then(setData).catch(() => toast.error('Unable to load your workspace.')); }, []);
+  useEffect(() => { const id = new URLSearchParams(window.location.search).get('auction'); fetch('/api/auction' + (id ? `?id=${encodeURIComponent(id)}` : '')).then(r => r.json()).then(setData).catch(() => toast.error('Unable to load your workspace.')); }, []);
   if (!data) return <div className="p-10 text-muted-foreground">Loading your admin workspace…</div>;
   const a = data.state;
   return <AdminDashboard
@@ -14,6 +14,6 @@ export default function AdminClient() {
     nonprofit={data.nonprofit}
     onManageItems={() => window.location.assign('/?view=Manage%20items')}
     onManagePage={() => window.location.assign('/?view=Nonprofit%20page')}
-    onCreateAuction={() => window.location.assign('/')}
+    onCreateAuction={() => window.location.assign('/onboarding')}
     onExport={() => toast.info('Open Manage items to export the full CSV report.')} />;
 }
