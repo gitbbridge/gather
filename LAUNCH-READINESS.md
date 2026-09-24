@@ -14,6 +14,8 @@ This is a functional test foundation, **not approved for real-money production a
 - Atomic compare-and-swap updates and request-key deduplication at the API boundary.
 - In-app outbid notifications with 15-second refresh.
 - Test donations and buy-now reservations, goal totals, item creation, pause/resume, naming, and CSV item reports.
+- Tenant-scoped Homepage Builder with structured responsive sections, live device previews, autosaved drafts, undo/redo, publish validation, and explicit draft-to-published promotion.
+- Organizer Closeout workflow with participant rollups, operational statuses, follow-up drafts, and a master CSV export.
 - Seven bidding-engine unit tests, type checking, production Worker build, and local workflow checks.
 
 ## Run

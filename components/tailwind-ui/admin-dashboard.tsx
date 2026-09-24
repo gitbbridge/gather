@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, CheckCircle2, CircleAlert, ClipboardCheck, Clock3, Download, ExternalLink, Users } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, CircleAlert, ClipboardCheck, Clock3, Download, ExternalLink, LayoutTemplate, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
@@ -12,6 +12,7 @@ type AdminDashboardProps = {
   onCreateAuction: () => void;
   onExport: () => void;
   onCloseout: () => void;
+  onHomepage: () => void;
 };
 
 // Selected Tailwind UI Plus patterns:
@@ -19,9 +20,9 @@ type AdminDashboardProps = {
 // - data-display/stats/with_trending.jsx for compact metric cards
 // - headings/section-headings/with_actions.jsx for action-led section headers
 // - layout/list-containers/separate_cards.jsx for operational checklists
-export function AdminDashboard({ auction, nonprofit, onManageItems, onManagePage, onCreateAuction, onExport, onCloseout }: AdminDashboardProps) {
+export function AdminDashboard({ auction, nonprofit, onManageItems, onManagePage, onCreateAuction, onExport, onCloseout, onHomepage }: AdminDashboardProps) {
   const checks = [
-    { label: 'Nonprofit page', detail: nonprofit ? 'Shareable page is ready' : 'Create your public page', done: Boolean(nonprofit), action: onManagePage },
+    { label: 'Homepage', detail: nonprofit ? 'Edit and publish your public homepage' : 'Create your public page', done: Boolean(nonprofit), action: nonprofit ? onHomepage : onManagePage },
     { label: 'Auction items', detail: auction.items ? `${auction.items} items listed` : 'Add your first item', done: auction.items > 0, action: onManageItems },
     { label: 'Bidder access', detail: 'Registration is required before bidding', done: true, action: onManagePage },
   ];
@@ -29,7 +30,7 @@ export function AdminDashboard({ auction, nonprofit, onManageItems, onManagePage
   return <div className="space-y-8">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><p className="eyebrow text-muted-foreground mb-2">ORGANIZER WORKSPACE</p><h1 className="text-3xl font-semibold tracking-tight">Your auction at a glance</h1><p className="mt-2 text-muted-foreground">Keep {auction.name} moving forward.</p></div>
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export</Button><Button className="col-span-2 sm:col-span-1" onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button variant="outline" onClick={onHomepage} disabled={!nonprofit}><LayoutTemplate size={16}/>Homepage</Button><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export</Button><Button onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
     </div>
 
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border bg-[#e0e7e2] sm:grid-cols-2 xl:grid-cols-4">

@@ -8,6 +8,14 @@ export const nonprofits = sqliteTable('nonprofits', {
   headline: text('headline').notNull(), mission: text('mission').notNull(),
   accent: text('accent').notNull().default('#175b47'),
 }, t => [index('idx_nonprofits_owner').on(t.owner)]);
+export const nonprofitHomepages = sqliteTable('nonprofit_homepages', {
+  nonprofitId: text('nonprofit_id').primaryKey().references(()=>nonprofits.id),
+  draft: text('draft').notNull(),
+  published: text('published'),
+  draftVersion: integer('draft_version').notNull().default(1),
+  updatedAt: integer('updated_at').notNull(),
+  publishedAt: integer('published_at'),
+}, t => [index('idx_homepages_updated').on(t.updatedAt)]);
 export const registrations = sqliteTable('registrations', {
   nonprofitId: text('nonprofit_id').notNull().references(()=>nonprofits.id),
   userId: text('user_id').notNull(), name: text('name').notNull(),
