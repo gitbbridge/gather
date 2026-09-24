@@ -140,13 +140,16 @@ body {
  --background:#ffffff; --foreground:#203b31; --primary:#175b47; --primary-foreground:#ffffff; --secondary:#eaf1ed; --secondary-foreground:#254b3d; --muted:#f0f4f1; --muted-foreground:#65776d; --accent:#e8f1eb; --accent-foreground:#175b47; --border:#e0e7e2; --input:#d9e2dc; --ring:#3d8567; --radius:0.75rem; --sidebar:#f8faf8; --sidebar-foreground:#344e40; --sidebar-primary:#175b47; --sidebar-accent:#e3efe8; --sidebar-border:#e0e7e2;
 }
 body{font-family:Arial,Helvetica,sans-serif;color:var(--foreground)}
+html{scroll-padding-bottom:88px}
+body{overflow-x:hidden}
+input,select,textarea{font-size:16px!important}
 button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer}button:disabled{cursor:not-allowed}button:focus-visible,a:focus-visible{outline:2px solid #3d8567;outline-offset:4px}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.11em;line-height:1.5}
 .campaign{background:#174c3b;border-radius:14px;padding:35px 38px;display:grid;grid-template-columns:1fr 255px;gap:36px;color:white;position:relative;overflow:hidden}
 .campaign h1{font-size:clamp(30px,3.2vw,46px);font-weight:500;letter-spacing:-.04em;line-height:1.12}
 .campaign-status{border:1px solid #ffffff30;border-radius:12px;padding:20px 22px;background:#ffffff06}
-.item-card{background:white;border:1px solid #e0e7e2;border-radius:12px;overflow:hidden;transition:box-shadow .2s,transform .2s}.item-card:hover{box-shadow:0 10px 25px #174c3b0c;transform:translateY(-2px)}
+.item-card{background:white;border:1px solid #e0e7e2;border-radius:16px;overflow:hidden;transition:box-shadow .2s,transform .2s}.item-card:hover{box-shadow:0 10px 25px #174c3b0c;transform:translateY(-2px)}
 .item-card>div:first-child{overflow:hidden}.panel{background:white;border:1px solid #e0e7e2;border-radius:12px;padding:24px}
 @media(max-width:1050px){.campaign{grid-template-columns:1fr;padding:28px;gap:24px}.campaign-status{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -156,4 +159,4 @@ button{cursor:pointer}button:disabled{cursor:not-allowed}button:focus-visible,a:
 .campaign-status{padding:15px 20px}
 @media(min-width:1051px){.campaign>div:first-child>p:nth-of-type(2){max-width:560px}.campaign-status>p:nth-of-type(1){margin-top:12px}.campaign-status>div:last-child{margin-top:12px;padding-top:12px}}
 @media(max-width:1050px){.campaign{grid-template-columns:1fr}.campaign-status{display:none}}
-@media(max-width:639px){.campaign{padding:20px}.campaign>div:first-child>p:nth-of-type(2){display:none}.campaign>div:first-child>.eyebrow{margin-bottom:10px}.campaign>div:first-child>div:last-child{margin-top:15px}.campaign h1{font-size:30px}header>div:first-child>span{max-width:120px}main>section:nth-of-type(2)>div{padding:12px}main>section:nth-of-type(2){margin-top:20px;margin-bottom:20px}}
+@media(max-width:639px){.campaign{padding:20px;border-radius:16px}.campaign>div:first-child>p:nth-of-type(2){display:none}.campaign>div:first-child>.eyebrow{margin-bottom:10px}.campaign>div:first-child>div:last-child{margin-top:15px}.campaign h1{font-size:30px}header>div:first-child>span{max-width:120px}main>section:nth-of-type(2)>div{padding:12px}main>section:nth-of-type(2){margin-top:20px;margin-bottom:20px}.panel{padding:18px;border-radius:16px}button[aria-label^="Add to watchlist"],button[aria-label^="Remove from watchlist"]{width:44px;height:44px}main a[href="#auctions"]{width:100%;justify-content:center}[data-slot="table-container"]{scroll-snap-type:x proximity}[data-slot="table-cell"]:first-child,[data-slot="table-head"]:first-child{position:sticky;left:0;background:white;z-index:1}}

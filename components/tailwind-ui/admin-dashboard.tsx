@@ -29,7 +29,7 @@ export function AdminDashboard({ auction, nonprofit, onManageItems, onManagePage
   return <div className="space-y-8">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><p className="eyebrow text-muted-foreground mb-2">ORGANIZER WORKSPACE</p><h1 className="text-3xl font-semibold tracking-tight">Your auction at a glance</h1><p className="mt-2 text-muted-foreground">Keep {auction.name} moving forward.</p></div>
-      <div className="flex gap-2"><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export report</Button><Button onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export</Button><Button className="col-span-2 sm:col-span-1" onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
     </div>
 
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border bg-[#e0e7e2] sm:grid-cols-2 xl:grid-cols-4">
