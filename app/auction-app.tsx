@@ -12,6 +12,7 @@ import { Table,TableHeader,TableRow,TableHead,TableBody,TableCell } from '@/comp
 import { Switch } from '@/components/ui/switch';
 import { Toaster,toast } from 'sonner';
 import { NonprofitSettings } from '@/app/nonprofit-settings';
+import { AdminDashboard } from '@/components/tailwind-ui/admin-dashboard';
 import type { NonprofitPublic } from '@/lib/nonprofits';
 import { createAuction,publicState,money } from '@/lib/auction';
 type State=ReturnType<typeof publicState>;
@@ -19,8 +20,8 @@ type Item=State['items'][number];
 type Data={nonprofit?:NonprofitPublic|null;registered?:boolean;state:State;user:{name:string}|null;owner:boolean;demo:boolean;id?:string;list:{id:string;name:string}[]};
 const categories=['All items','Getaways','Food & drink','Art & home','Wellness','Experiences'];
 const initial:Data={state:publicState(createAuction(),' ',false),user:null,owner:false,demo:true,list:[]};
-export default function AuctionApp({auctionId='',bidderMode=false}:{auctionId?:string;bidderMode?:boolean}){
- const [data,setData]=useState<Data>(initial),[loading,setLoading]=useState(true),[error,setError]=useState(''),[view,setView]=useState('Explore auction'),[category,setCategory]=useState('All items'),[search,setSearch]=useState(''),[sort,setSort]=useState('featured'),[selected,setSelected]=useState<Item|null>(null),[modal,setModal]=useState(''),[busy,setBusy]=useState(false),[amount,setAmount]=useState(''),[now,setNow]=useState(0),[id,setId]=useState('');
+export default function AuctionApp({auctionId='',bidderMode=false,initialView='Explore auction'}:{auctionId?:string;bidderMode?:boolean;initialView?:string}){
+ const [data,setData]=useState<Data>(initial),[loading,setLoading]=useState(true),[error,setError]=useState(''),[view,setView]=useState(initialView),[category,setCategory]=useState('All items'),[search,setSearch]=useState(''),[sort,setSort]=useState('featured'),[selected,setSelected]=useState<Item|null>(null),[modal,setModal]=useState(''),[busy,setBusy]=useState(false),[amount,setAmount]=useState(''),[now,setNow]=useState(0),[id,setId]=useState('');
  const load=useCallback(async(auctionId?:string)=>{try{const r=await fetch('/api/auction'+(auctionId?'?id='+encodeURIComponent(auctionId):''));const d=await r.json() as Data & {error?:string};if(!r.ok)throw Error(d.error);setData(d);setError('');}catch(e){setError((e as Error).message);}finally{setLoading(false);}},[]);
  useEffect(()=>{const value=auctionId||new URLSearchParams(window.location.search).get('auction')||'';setId(value);load(value);setNow(Date.now());},[load,auctionId]);
  useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),1000);const p=setInterval(()=>load(id),15000);return()=>{clearInterval(t);clearInterval(p)}},[id,load]);
