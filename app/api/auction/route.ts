@@ -2,24 +2,33 @@ import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { Auction,bid,createAuction,publicState } from '@/lib/auction';
 import { z } from 'zod';
+import { nonprofitById,nonprofitInsert,isRegistered,publicNonprofit } from '@/lib/nonprofits';
 export const dynamic='force-dynamic';
-const input=z.object({action:z.enum(['create','bid','watch','donate','buy','settings','item']),id:z.string().max(100).optional(),item:z.string().max(100).optional(),amount:z.number().int().positive().max(100000000).optional(),key:z.string().uuid(),name:z.string().trim().min(2).max(100).optional(),organization:z.string().trim().min(2).max(100).optional(),paused:z.boolean().optional(),title:z.string().trim().min(3).max(100).optional(),category:z.enum(['Getaways','Food & drink','Art & home','Wellness','Experiences']).optional(),description:z.string().trim().min(10).max(2000).optional(),donor:z.string().trim().min(2).max(100).optional(),start:z.number().int().min(100).max(100000000).optional(),value:z.number().int().min(100).max(100000000).optional()});
+const input=z.object({action:z.enum(['create','bid','watch','donate','buy','settings','item']),id:z.string().max(100).optional(),item:z.string().max(100).optional(),amount:z.number().int().positive().max(100000000).optional(),key:z.string().uuid(),name:z.string().trim().min(2).max(100).optional(),organization:z.string().trim().min(2).max(100).optional(),nonprofitId:z.string().max(100).optional(),paused:z.boolean().optional(),title:z.string().trim().min(3).max(100).optional(),category:z.enum(['Getaways','Food & drink','Art & home','Wellness','Experiences']).optional(),description:z.string().trim().min(10).max(2000).optional(),donor:z.string().trim().min(2).max(100).optional(),start:z.number().int().min(100).max(100000000).optional(),value:z.number().int().min(100).max(100000000).optional()});
 function db(){if(!env.DB)throw Error('Database unavailable');return env.DB;}
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 export async function GET(req:Request){try{const user=await getChatGPTUser();const id=new URL(req.url).searchParams.get('id');const list=user?(await db().prepare('SELECT id,state FROM auctions WHERE owner=? ORDER BY rowid DESC').bind(user.userId).all<{id:string;state:string}>()).results.map(r=>({id:r.id,name:JSON.parse(r.state).name})):[];
- const row=id?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(id).first<{id:string;owner:string;state:string}>():list.length?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(list[0].id).first<{id:string;owner:string;state:string}>():null;
- return json({user:user?{name:user.displayName}:null,list,id:row?.id,owner:!!user&&row?.owner===user.userId,state:publicState(row?JSON.parse(row.state):createAuction(),user?.userId||'',!!user&&row?.owner===user.userId),demo:!row});}catch(e){console.error(e);return json({error:'Unable to load the auction. Please try again.'},503);}}
+ const row=id?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(id).first<{id:string;owner:string;state:string;nonprofit_id:string|null}>():list.length?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(list[0].id).first<{id:string;owner:string;state:string;nonprofit_id:string|null}>():null;
+ if(id&&id!=='preview'&&!row)return json({error:'Auction not found.'},404);
+ const nonprofit=row?.nonprofit_id?await nonprofitById(row.nonprofit_id):null;
+ const registered=!!user&&!!nonprofit&&(nonprofit.owner===user.userId||await isRegistered(nonprofit.id,user.userId));
+ return json({nonprofit:nonprofit?publicNonprofit(nonprofit):null,registered,user:user?{name:user.displayName}:null,list,id:row?.id,owner:!!user&&row?.owner===user.userId,state:publicState(row?JSON.parse(row.state):createAuction(),user?.userId||'',!!user&&row?.owner===user.userId),demo:!row});}catch(e){console.error(e);return json({error:'Unable to load the auction. Please try again.'},503);}}
 export async function POST(req:Request){try{
  const origin=req.headers.get('origin');if(!origin||origin!==new URL(req.url).origin)return json({error:'Invalid request origin.'},403);
  const user=await getChatGPTUser();if(!user)return json({error:'Sign in to continue.'},401);
  if(Number(req.headers.get('content-length')||0)>16000)return json({error:'Request too large.'},413);
  const raw=await req.text();if(raw.length>16000)return json({error:'Request too large.'},413);
  const parsed=input.safeParse(JSON.parse(raw));if(!parsed.success)return json({error:'Check the information and try again.'},400);const x=parsed.data;
- if(x.action==='create'){const id=x.key;const count=await db().prepare('SELECT count(*) AS n FROM auctions WHERE owner=?').bind(user.userId).first<{n:number}>();if((count?.n||0)>=20)return json({error:'The test workspace supports up to 20 auctions.'},400);await db().prepare('INSERT OR IGNORE INTO auctions (id,owner,state,version) VALUES (?,?,?,0)').bind(id,user.userId,JSON.stringify(createAuction(x.name,x.organization))).run();return json({id});}
+ if(x.action==='create'){const id=x.key;const count=await db().prepare('SELECT count(*) AS n FROM auctions WHERE owner=?').bind(user.userId).first<{n:number}>();if((count?.n||0)>=20)return json({error:'The test workspace supports up to 20 auctions.'},400);let nonprofitId=id;let organization=x.organization;
+ if(x.nonprofitId){const n=await nonprofitById(x.nonprofitId);if(!n||n.owner!==user.userId)return json({error:'Only the nonprofit organizer can add an auction.'},403);nonprofitId=n.id;organization=n.name;}
+ const writes=[];if(!x.nonprofitId)writes.push(nonprofitInsert(id,user.userId,organization||'My nonprofit'));
+ writes.push(db().prepare('INSERT INTO auctions (id,owner,state,version,nonprofit_id) VALUES (?,?,?,0,?) ON CONFLICT(id) DO NOTHING').bind(id,user.userId,JSON.stringify(createAuction(x.name,organization)),nonprofitId));await db().batch(writes);return json({id});}
  if(!x.id)return json({error:'Choose an auction first.'},400);
  for(let attempt=0;attempt<5;attempt++){
- const row=await db().prepare('SELECT * FROM auctions WHERE id=?').bind(x.id).first<{owner:string;state:string;version:number}>();if(!row)return json({error:'Auction not found.'},404);const a:Auction=JSON.parse(row.state);const uid=user.userId;const now=Date.now();if(a.requests.includes(uid+':'+x.key))return json({ok:true});
+ const row=await db().prepare('SELECT * FROM auctions WHERE id=?').bind(x.id).first<{owner:string;state:string;version:number;nonprofit_id:string|null}>();if(!row)return json({error:'Auction not found.'},404);const a:Auction=JSON.parse(row.state);const uid=user.userId;const now=Date.now();if(a.requests.includes(uid+':'+x.key))return json({ok:true});
  const item=a.items.find(i=>i.id===x.item);const owner=row.owner===uid;
+ if(x.action==='bid'&&!owner){if(!row.nonprofit_id)return json({error:'The organizer has not enabled bidder registration yet.'},409);if(!await isRegistered(row.nonprofit_id,uid)){const n=await nonprofitById(row.nonprofit_id);return json({error:'Register with this nonprofit to place a bid.',registerUrl:`/n/${n!.slug}/join?auction=${encodeURIComponent(x.id)}&item=${encodeURIComponent(x.item||'')}`},403);}}
+ 
  if(['settings','item'].includes(x.action)&&!owner)return json({error:'Only the organizer can do this.'},403);
  if(['bid','buy','donate'].includes(x.action)&&a.paused)return json({error:'The organizer has paused this auction.'},409);
  if(['bid','buy','watch'].includes(x.action)&&!item)return json({error:'Item not found.'},404);
