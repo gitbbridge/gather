@@ -15,5 +15,6 @@ export default function AdminClient() {
     onManageItems={() => window.location.assign('/?view=Manage%20items')}
     onManagePage={() => window.location.assign('/?view=Nonprofit%20page')}
     onCreateAuction={() => window.location.assign('/onboarding')}
+    onCloseout={() => window.location.assign(`/closeout?auction=${encodeURIComponent(data.id)}`)}
     onExport={() => toast.info('Open Manage items to export the full CSV report.')} />;
 }

@@ -18,3 +18,10 @@ export const auctions = sqliteTable('auctions', {
   state: text('state').notNull(), version: integer('version').notNull().default(0),
   nonprofitId: text('nonprofit_id').references(()=>nonprofits.id),
 }, t => [index('idx_auctions_owner').on(t.owner),index('idx_auctions_nonprofit').on(t.nonprofitId)]);
+export const closeoutRecords = sqliteTable('closeout_records', {
+  auctionId: text('auction_id').notNull().references(()=>auctions.id),
+  userId: text('user_id').notNull(),
+  pickupStatus: text('pickup_status').notNull().default('pending'),
+  followupStatus: text('followup_status').notNull().default('not_sent'),
+  updatedAt: integer('updated_at').notNull(),
+}, t => [primaryKey({columns:[t.auctionId,t.userId]}),index('idx_closeout_auction').on(t.auctionId)]);
