@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {bid,createAuction,publicState} from '../lib/auction.ts';
+const fixture=()=>createAuction().items[0];
+test('first bid charges the opening price, not the private maximum',()=>{const i=fixture();bid(i,'a',50000,Date.now());assert.equal(i.price,20000);assert.equal(i.leader,'a');});
+test('proxy bids charge one increment above the competing maximum',()=>{const i=fixture();bid(i,'a',50000,Date.now());bid(i,'b',30000,Date.now()+1);assert.equal(i.price,32500);assert.equal(i.leader,'a');});
+test('equal maxima favor the earlier bidder and never exceed maximum',()=>{const i=fixture();bid(i,'a',50000,1);bid(i,'b',50000,2);assert.equal(i.leader,'a');assert.equal(i.price,50000);});
+test('closed, sold, fractional, and below-minimum bids fail',()=>{for(const amount of [0,19999,20000.5,NaN,Infinity])assert.throws(()=>bid(fixture(),'a',amount,Date.now()));const i=fixture();assert.throws(()=>bid(i,'a',50000,i.ends));i.sold=true;assert.throws(()=>bid(i,'a',50000,Date.now()));});
+test('late bids extend the deadline by two minutes',()=>{const i=fixture();const t=i.ends-1000;bid(i,'a',50000,t);assert.equal(i.ends,t+120000);});
+test('view never exposes another bidder maximum or identity',()=>{const a=createAuction();bid(a.items[0],'secret-id',99900,Date.now());const view=publicState(a,'other',false);assert.equal(view.items[0].myMax,0);assert.equal(view.items[0].bids,undefined);assert.equal(view.items[0].leader,undefined);assert.ok(!JSON.stringify(view).includes('secret-id'));});
+test('raising own maximum does not increase the first bid price',()=>{const i=fixture();bid(i,'a',50000,1);bid(i,'a',60000,2);assert.equal(i.price,20000);assert.equal(i.bids.length,1);});
