@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
 import type Stripe from 'stripe';
 import { verifiedStripeEvent } from '@/lib/stripe';
+import { processStripeEvent } from '@/lib/supabase/stripe-events';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,9 @@ export async function POST(request: Request) {
       Math.floor(Date.now() / 1000),
     ).run();
 
-    return json({ received: true, duplicate: result.meta.changes === 0 });
+    const duplicate = result.meta.changes === 0;
+    if (!duplicate) await processStripeEvent(event);
+    return json({ received: true, duplicate });
   } catch (error) {
     console.error('Unable to record Stripe webhook:', error);
     return json({ error: 'Unable to record Stripe event.' }, 500);

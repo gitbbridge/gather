@@ -9,6 +9,7 @@ test('organizer-paid commission comes from nonprofit proceeds', () => {
     organizerFeeCents: 500,
     bidderFeeCents: 0,
     giveHolidaysMarkupCents: 0,
+    giveHolidaysWholesaleCostCents: 0,
     bidderTotalCents: 10_000,
     organizerGrossCents: 9_500,
     applicationFeeCents: 500,
@@ -22,14 +23,19 @@ test('bidder-paid commission is added to checkout', () => {
   assert.equal(payment.applicationFeeCents, 500);
 });
 
-test('split commission and Give Holidays markup stay separately auditable', () => {
-  const payment = calculateAuctionPayment(12_345, 40, 25_000);
+test('travel cost and markup are withheld from proceeds rather than added to bidder checkout', () => {
+  const payment = calculateAuctionPayment(12_345, 40, 1_000, 5_000);
   assert.equal(payment.platformFeeCents, 617);
   assert.equal(payment.organizerFeeCents, 247);
   assert.equal(payment.bidderFeeCents, 370);
-  assert.equal(payment.giveHolidaysMarkupCents, 25_000);
-  assert.equal(payment.bidderTotalCents, 37_715);
-  assert.equal(payment.organizerGrossCents, 12_098);
-  assert.equal(payment.applicationFeeCents, 25_617);
+  assert.equal(payment.giveHolidaysMarkupCents, 1_000);
+  assert.equal(payment.giveHolidaysWholesaleCostCents, 5_000);
+  assert.equal(payment.bidderTotalCents, 12_715);
+  assert.equal(payment.organizerGrossCents, 6_098);
+  assert.equal(payment.applicationFeeCents, 6_617);
   assert.equal(payment.organizerFeeCents + payment.bidderFeeCents, payment.platformFeeCents);
+});
+
+test('travel settlement cannot exceed the amount collected', () => {
+  assert.throws(() => calculateAuctionPayment(10_000, 100, 2_000, 9_000), /does not cover/);
 });
