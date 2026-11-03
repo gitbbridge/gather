@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight, LoaderCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LoaderCircle, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export function AuthForm({ returnTo }: { returnTo: string }) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -22,6 +22,13 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
 
     try {
       const supabase = createSupabaseBrowserClient();
+      if (mode === 'forgot') {
+        const redirectTo = `${window.location.origin}/auth/callback?return_to=${encodeURIComponent('/auth/update-password')}`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        setMessage('If an account exists for that email, a password-reset link is on its way. Check your inbox and spam folder.');
+        return;
+      }
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -50,10 +57,10 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
 
   return (
     <>
-      <div className="mt-7 grid grid-cols-2 rounded-lg bg-muted p-1" aria-label="Authentication mode">
+      {mode === 'forgot' ? <div className="mt-7 rounded-xl bg-[#f5f8f6] p-4"><button type="button" onClick={() => { setMode('signin'); setMessage(''); }} className="flex items-center gap-2 text-sm font-semibold text-[#175b47]"><ArrowLeft size={15}/>Back to sign in</button><p className="mt-3 text-sm leading-6 text-muted-foreground">Enter your account email and we’ll send a secure password-reset link.</p></div> : <div className="mt-7 grid grid-cols-2 rounded-lg bg-muted p-1" aria-label="Authentication mode">
         <button type="button" onClick={() => { setMode('signin'); setMessage(''); }} className={`min-h-10 rounded-md text-sm font-medium ${mode === 'signin' ? 'bg-white shadow-sm' : 'text-muted-foreground'}`}>Sign in</button>
         <button type="button" onClick={() => { setMode('signup'); setMessage(''); }} className={`min-h-10 rounded-md text-sm font-medium ${mode === 'signup' ? 'bg-white shadow-sm' : 'text-muted-foreground'}`}>Create account</button>
-      </div>
+      </div>}
       <form className="mt-6 space-y-4" onSubmit={submit}>
         {mode === 'signup' && (
           <label className="block text-sm font-medium">Full name
@@ -63,12 +70,13 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
         <label className="block text-sm font-medium">Email
           <Input className="mt-2 h-12" name="email" type="email" autoComplete="email" required />
         </label>
-        <label className="block text-sm font-medium">Password
+        {mode !== 'forgot' && <label className="block text-sm font-medium">Password
           <Input className="mt-2 h-12" name="password" type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} minLength={8} required />
-        </label>
+        </label>}
+        {mode === 'signin' && <div className="-mt-1 text-right"><button type="button" onClick={() => { setMode('forgot'); setMessage(''); }} className="text-sm font-medium text-[#175b47] hover:underline">Forgot password?</button></div>}
         <Button className="h-12 w-full" disabled={busy}>
-          {busy ? <LoaderCircle className="animate-spin" /> : <ArrowRight />}
-          {mode === 'signin' ? 'Sign in' : 'Create account'}
+          {busy ? <LoaderCircle className="animate-spin" /> : mode === 'forgot' ? <Mail/> : <ArrowRight />}
+          {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
         </Button>
       </form>
       {message && <p className="mt-4 text-sm leading-6" role="status">{message}</p>}

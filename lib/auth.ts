@@ -51,7 +51,8 @@ export function safeReturnPath(value: string): string {
   if (!value.startsWith('/') || value.startsWith('//')) return '/';
   try {
     const url = new URL(value, 'https://app.local');
-    if (url.origin !== 'https://app.local' || url.pathname.startsWith('/auth')) return '/';
+    if (url.origin !== 'https://app.local') return '/';
+    if (url.pathname.startsWith('/auth') && url.pathname !== '/auth/update-password') return '/';
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return '/';
