@@ -4,8 +4,9 @@ import { Auction,bid,createAuction,publicState } from '@/lib/auction';
 import { z } from 'zod';
 import { nonprofitById,nonprofitInsert,isRegistered,publicNonprofit } from '@/lib/nonprofits';
 import { paymentConnection } from '@/lib/payments';
+import { syncCreatedAuctionToSupabase } from '@/lib/supabase/sync-auction';
 export const dynamic='force-dynamic';
-const starterItem=z.object({title:z.string().trim().min(1).max(100),value:z.number().int().min(0).max(100000000),source:z.enum(['custom','give-holidays']).optional()});
+const starterItem=z.object({title:z.string().trim().min(1).max(100),value:z.number().int().min(0).max(100000000),source:z.enum(['custom','give-holidays']).optional(),packageCode:z.string().trim().min(2).max(30).regex(/^[A-Za-z0-9_-]+$/).optional()});
 const input=z.object({action:z.enum(['create','bid','watch','donate','buy','settings','item']),id:z.string().max(100).optional(),item:z.string().max(100).optional(),amount:z.number().int().positive().max(100000000).optional(),key:z.string().uuid(),name:z.string().trim().min(2).max(100).optional(),organization:z.string().trim().min(2).max(100).optional(),nonprofitSlug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(48).optional(),nonprofitId:z.string().max(100).optional(),paused:z.boolean().optional(),title:z.string().trim().min(3).max(100).optional(),category:z.enum(['Getaways','Food & drink','Art & home','Wellness','Experiences']).optional(),description:z.string().trim().min(10).max(2000).optional(),donor:z.string().trim().min(2).max(100).optional(),start:z.number().int().min(100).max(100000000).optional(),value:z.number().int().min(100).max(100000000).optional(),openDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),closeDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),commissionPayer:z.enum(['organizer','split','bidder']).optional(),organizerShare:z.number().int().min(0).max(100).optional(),items:z.array(starterItem).max(25).optional()});
 function db(){if(!env.DB)throw Error('Database unavailable');return env.DB;}
 const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
@@ -23,13 +24,13 @@ export async function POST(req:Request){try{
  const raw=await req.text();if(raw.length>16000)return json({error:'Request too large.'},413);
  const parsed=input.safeParse(JSON.parse(raw));if(!parsed.success)return json({error:'Check the information and try again.'},400);const x=parsed.data;
  if(x.action==='create'){const id=x.key;const count=await db().prepare('SELECT count(*) AS n FROM auctions WHERE owner=?').bind(user.userId).first<{n:number}>();if((count?.n||0)>=20)return json({error:'The test workspace supports up to 20 auctions.'},400);let nonprofitId=id;let organization=x.organization;
- if(x.nonprofitId){const n=await nonprofitById(x.nonprofitId);if(!n||n.owner!==user.userId)return json({error:'Only the nonprofit organizer can add an auction.'},403);nonprofitId=n.id;organization=n.name;}
+ let nonprofitSlug=x.nonprofitSlug||'';if(x.nonprofitId){const n=await nonprofitById(x.nonprofitId);if(!n||n.owner!==user.userId)return json({error:'Only the nonprofit organizer can add an auction.'},403);nonprofitId=n.id;organization=n.name;nonprofitSlug=n.slug;}
  if(!x.nonprofitId&&x.nonprofitSlug&&await db().prepare('SELECT id FROM nonprofits WHERE slug=?').bind(x.nonprofitSlug).first())return json({error:'That nonprofit page address is already in use.'},409);
  const writes=[];if(!x.nonprofitId)writes.push(nonprofitInsert(id,user.userId,organization||'My nonprofit',x.nonprofitSlug));
  const starts=x.openDate?new Date(`${x.openDate}T00:00:00`).getTime():undefined;const ends=x.closeDate?new Date(`${x.closeDate}T23:59:59`).getTime():undefined;
  if(starts&&ends&&ends<=starts)return json({error:'The closing date must be after the opening date.'},400);
  const organizerPercent=x.commissionPayer==='bidder'?0:x.commissionPayer==='split'?x.organizerShare??50:100;
- writes.push(db().prepare('INSERT INTO auctions (id,owner,state,version,nonprofit_id) VALUES (?,?,?,0,?) ON CONFLICT(id) DO NOTHING').bind(id,user.userId,JSON.stringify(createAuction(x.name,organization,{starts,ends,organizerPercent,items:x.items})),nonprofitId));await db().batch(writes);return json({id});}
+ const auction=createAuction(x.name,organization,{starts,ends,organizerPercent,items:x.items});writes.push(db().prepare('INSERT INTO auctions (id,owner,state,version,nonprofit_id) VALUES (?,?,?,0,?) ON CONFLICT(id) DO NOTHING').bind(id,user.userId,JSON.stringify(auction),nonprofitId));await db().batch(writes);try{await syncCreatedAuctionToSupabase({auctionId:id,nonprofitId,ownerId:user.userId,nonprofitSlug:nonprofitSlug||`nonprofit-${nonprofitId.slice(0,8)}`,auction});}catch(syncError){console.error('Supabase auction sync failed:',syncError);}return json({id});}
  if(!x.id)return json({error:'Choose an auction first.'},400);
  for(let attempt=0;attempt<5;attempt++){
  const row=await db().prepare('SELECT * FROM auctions WHERE id=?').bind(x.id).first<{owner:string;state:string;version:number;nonprofit_id:string|null}>();if(!row)return json({error:'Auction not found.'},404);const a:Auction=JSON.parse(row.state);const uid=user.userId;const now=Date.now();if(a.requests.includes(uid+':'+x.key))return json({ok:true});

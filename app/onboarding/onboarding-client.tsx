@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 const steps = ['Organization', 'Auction Details', 'Add Items', 'Payment & Fees', 'Review & Launch'];
 const storageKey = 'gather-onboarding-draft-v1';
 
-type Item = { id: string; title: string; value: string; source?: 'custom' | 'give-holidays' };
+type Item = { id: string; title: string; value: string; source?: 'custom' | 'give-holidays'; packageCode?: string };
 type TravelPackage = { id: string; destination: string; region: string; code: string; tone: string };
 const travelPackages: TravelPackage[] = [
   { id: 'cabo-san-lucas', destination: 'Cabo San Lucas', region: 'Mexico', code: 'CABO', tone: 'linear-gradient(135deg, #d68054 0%, #f2c37d 100%)' },
@@ -62,7 +62,7 @@ export default function OnboardingClient() {
     try {
       const response = await fetch('/api/auction', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', key: crypto.randomUUID(), organization: draft.organization.trim(), nonprofitSlug: pageSlug(draft), name: draft.auctionName.trim(), openDate: draft.auctionDate || undefined, closeDate: draft.closeDate || undefined, commissionPayer: draft.commissionPayer, organizerShare: organizationShare, items: draft.items.map(item => ({ title: item.title.trim(), value: Math.round((Number(item.value) || 0) * 100), source: item.source })) }),
+        body: JSON.stringify({ action: 'create', key: crypto.randomUUID(), organization: draft.organization.trim(), nonprofitSlug: pageSlug(draft), name: draft.auctionName.trim(), openDate: draft.auctionDate || undefined, closeDate: draft.closeDate || undefined, commissionPayer: draft.commissionPayer, organizerShare: organizationShare, items: draft.items.map(item => ({ title: item.title.trim(), value: Math.round((Number(item.value) || 0) * 100), source: item.source, packageCode: item.packageCode })) }),
       });
       const data = await response.json() as { id?: string; error?: string };
       if (!response.ok || !data.id) throw Error(data.error || 'Unable to create your fundraiser.');
@@ -77,7 +77,7 @@ export default function OnboardingClient() {
     const id = `give-holidays-${travelPackage.id}`;
     update({ items: draft.items.some(item => item.id === id)
       ? draft.items.filter(item => item.id !== id)
-      : [...draft.items, { id, title: `${travelPackage.destination} getaway`, value: '', source: 'give-holidays' }] });
+      : [...draft.items, { id, title: `${travelPackage.destination} getaway`, value: '', source: 'give-holidays', packageCode: travelPackage.code }] });
   };
   const editItem = (id: string, changes: Partial<Item>) => update({ items: draft.items.map(item => item.id === id ? { ...item, ...changes } : item) });
   const removeItem = (id: string) => update({ items: draft.items.filter(item => item.id !== id) });
