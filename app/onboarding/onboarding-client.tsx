@@ -1,22 +1,95 @@
 'use client';
-import { FormEvent, useState } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, ExternalLink, Leaf, Sparkles } from 'lucide-react';
+
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Leaf, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-const steps = ['Welcome', 'Your fundraiser', 'Ready to share'];
+const steps = ['Organization', 'Auction Details', 'Add Items', 'Payment & Fees', 'Review & Launch'];
+const storageKey = 'gather-onboarding-draft-v1';
+
+type Item = { id: string; title: string; value: string };
+type Draft = {
+  organization: string; contactName: string; email: string; auctionName: string;
+  auctionDate: string; closeDate: string; items: Item[];
+  commissionPayer: 'organizer' | 'split' | 'bidder'; organizerShare: string;
+};
+const emptyDraft: Draft = {
+  organization: '', contactName: '', email: '', auctionName: '', auctionDate: '', closeDate: '',
+  items: [], commissionPayer: 'organizer', organizerShare: '50',
+};
 
 export default function OnboardingClient() {
-  const [step, setStep] = useState(0), [organization, setOrganization] = useState(''), [auction, setAuction] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [result, setResult] = useState<{ id: string } | null>(null);
-  const submit = async (event: FormEvent) => { event.preventDefault(); if (step < 1) { setStep(1); return; } setBusy(true); setError(''); try { const r = await fetch('/api/auction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create', key: crypto.randomUUID(), organization, name: auction }) }); const data = await r.json() as { id?: string; error?: string }; if (!r.ok || !data.id) throw Error(data.error || 'Unable to create your fundraiser.'); setResult({ id: data.id }); setStep(2); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  const share = typeof window === 'undefined' || !result ? '' : `${window.location.origin}/?auction=${result.id}`;
-  return <main className="min-h-screen bg-[#f8faf9] px-4 py-5 pb-16 sm:px-5 md:py-12"><div className="mx-auto max-w-3xl"><div className="mb-8 flex items-center justify-between gap-4 sm:mb-12"><a href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#175b47]"><span className="flex size-9 items-center justify-center rounded-full bg-[#175b47] text-white"><Leaf size={21}/></span>gather<span className="text-[#78a68b]">.</span></a><a href="/admin" className="min-h-11 content-center text-right text-xs text-muted-foreground hover:text-foreground sm:text-sm">Already started? <span className="block underline sm:inline">Open admin</span></a></div>
-    <div className="mb-10"><div className="flex items-center justify-between gap-3">{steps.map((label, index) => <div key={label} className="flex flex-1 items-center gap-2"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${index <= step ? 'bg-[#175b47] text-white' : 'bg-white border text-muted-foreground'}`}>{index < step ? <CheckCircle2 size={16}/> : index + 1}</span><span className={`hidden text-sm sm:block ${index <= step ? 'font-semibold' : 'text-muted-foreground'}`}>{label}</span>{index < steps.length - 1 && <span className={`h-px flex-1 ${index < step ? 'bg-[#175b47]' : 'bg-[#dce6df]'}`}/>}</div>)}</div></div>
-    <section className="rounded-2xl border bg-white p-5 shadow-sm sm:p-6 md:p-10">
-      {step === 0 && <div className="max-w-xl"><span className="mb-7 inline-flex rounded-2xl bg-[#eaf1ed] p-4 text-[#175b47]"><Sparkles size={28}/></span><p className="eyebrow text-[#648371] mb-3">WELCOME TO GATHER</p><h1 className="text-4xl font-semibold tracking-tight">Set up your fundraiser in a few minutes.</h1><p className="mt-5 text-lg leading-relaxed text-muted-foreground">We’ll create your nonprofit home, add a starter auction, and give you one simple link to share.</p><div className="mt-8 grid gap-3 text-sm"><Feature text="A shareable nonprofit page"/><Feature text="A ready-to-edit starter auction"/><Feature text="A private admin workspace"/></div><Button className="mt-9 h-12 px-6" onClick={() => setStep(1)}>Let’s get started <ArrowRight size={17}/></Button></div>}
-      {step === 1 && <form onSubmit={submit} className="max-w-xl"><button type="button" onClick={() => setStep(0)} className="mb-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft size={15}/>Back</button><p className="eyebrow text-[#648371] mb-3">YOUR FUNDRAISER</p><h1 className="text-3xl font-semibold tracking-tight">Tell us the basics.</h1><p className="mt-3 text-muted-foreground">You can change every detail later. Keep it simple for now.</p><div className="mt-8 space-y-5"><label className="block text-sm font-medium">Nonprofit name<Input className="mt-2 h-12" value={organization} onChange={e => setOrganization(e.target.value)} placeholder="Community Arts Foundation" required minLength={2} maxLength={100} autoFocus/></label><label className="block text-sm font-medium">First auction name<Input className="mt-2 h-12" value={auction} onChange={e => setAuction(e.target.value)} placeholder="Annual Giving Auction" required minLength={2} maxLength={100}/></label></div>{error && <p role="alert" className="mt-4 text-sm text-red-700">{error}</p>}<div className="mt-8 flex items-center justify-between gap-3"><span className="flex items-center gap-2 text-xs text-muted-foreground"><CircleHelp size={15}/> No payment setup needed yet</span><Button disabled={busy} className="h-12 px-6">{busy ? 'Creating…' : 'Create my fundraiser'} <ArrowRight size={17}/></Button></div></form>}
-      {step === 2 && <div className="max-w-xl"><span className="mb-7 inline-flex rounded-2xl bg-[#eaf1ed] p-4 text-[#175b47]"><CheckCircle2 size={28}/></span><p className="eyebrow text-[#648371] mb-3">YOU’RE READY</p><h1 className="text-3xl font-semibold tracking-tight">Your fundraiser has a home.</h1><p className="mt-4 text-muted-foreground">We created a private workspace with starter items. Add your own donations, then share your page when it feels ready.</p><div className="mt-7 rounded-xl bg-[#f5f8f6] p-4"><p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Your auction workspace</p><p className="mt-2 break-all font-medium">{share}</p></div><div className="mt-8 flex flex-wrap gap-3"><Button onClick={() => window.location.assign(`/admin?auction=${result?.id}`)}>Open admin workspace <ArrowRight size={17}/></Button><Button variant="outline" asChild><a href={`/n/${organization.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${result?.id.slice(0, 8)}`} target="_blank" rel="noreferrer">Preview public page <ExternalLink size={16}/></a></Button></div></div>}
-    </section><p className="mt-6 text-center text-xs text-muted-foreground">Private test setup · You can invite bidders after connecting your launch settings.</p></div></main>;
+  const [step, setStep] = useState(0);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [hydrated, setHydrated] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [auctionId, setAuctionId] = useState('');
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (saved) setDraft({ ...emptyDraft, ...JSON.parse(saved) });
+    } catch { /* A local draft is optional until Supabase is connected. */ }
+    setHydrated(true);
+  }, []);
+  useEffect(() => {
+    if (!hydrated || auctionId) return;
+    try { window.localStorage.setItem(storageKey, JSON.stringify(draft)); } catch { /* Keep setup usable if local storage is unavailable. */ }
+  }, [draft, hydrated, auctionId]);
+
+  const update = (changes: Partial<Draft>) => setDraft(current => ({ ...current, ...changes }));
+  const next = () => {
+    setError('');
+    if (step === 0 && (!draft.organization.trim() || !draft.contactName.trim() || !draft.email.trim())) return setError('Add your organization, contact name, and email to continue.');
+    if (step === 1 && !draft.auctionName.trim()) return setError('Give your auction a name to continue.');
+    if (step === 2 && draft.items.some(item => !item.title.trim())) return setError('Finish the item name or remove the empty row.');
+    setStep(current => Math.min(current + 1, 4));
+  };
+  const launch = async () => {
+    setBusy(true); setError('');
+    try {
+      const response = await fetch('/api/auction', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', key: crypto.randomUUID(), organization: draft.organization.trim(), name: draft.auctionName.trim() }),
+      });
+      const data = await response.json() as { id?: string; error?: string };
+      if (!response.ok || !data.id) throw Error(data.error || 'Unable to create your fundraiser.');
+      setAuctionId(data.id);
+      window.localStorage.removeItem(storageKey);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to create your fundraiser.');
+    } finally { setBusy(false); }
+  };
+  const addItem = () => update({ items: [...draft.items, { id: crypto.randomUUID(), title: '', value: '' }] });
+  const editItem = (id: string, changes: Partial<Item>) => update({ items: draft.items.map(item => item.id === id ? { ...item, ...changes } : item) });
+  const removeItem = (id: string) => update({ items: draft.items.filter(item => item.id !== id) });
+  const organizationShare = Math.min(100, Math.max(0, Number(draft.organizerShare) || 0));
+  const bidderShare = draft.commissionPayer === 'organizer' ? 0 : draft.commissionPayer === 'bidder' ? 100 : 100 - organizationShare;
+
+  return <main className="min-h-screen bg-[#f8faf9] px-4 py-5 pb-16 sm:px-5 md:py-12"><div className="mx-auto max-w-3xl">
+    <header className="mb-8 flex items-center justify-between gap-4 sm:mb-12"><a href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#175b47]"><span className="grid size-9 place-items-center rounded-full bg-[#175b47] text-white"><Leaf size={21}/></span>gather<span className="text-[#78a68b]">.</span></a><span className="text-xs text-muted-foreground">{hydrated && !auctionId ? 'Draft saved on this device' : 'Set up your fundraiser'}</span></header>
+    <ol className="mb-9 flex items-start justify-between gap-1 sm:mb-12">{steps.map((label, index) => <li key={label} className="flex min-w-0 flex-1 items-center gap-2"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${index <= step ? 'bg-[#175b47] text-white' : 'border bg-white text-muted-foreground'}`}>{index < step ? <CheckCircle2 size={16}/> : index + 1}</span><span className={`hidden text-xs leading-tight sm:block ${index <= step ? 'font-semibold text-[#175b47]' : 'text-muted-foreground'}`}>{label}</span>{index < 4 && <span className={`h-px min-w-2 flex-1 ${index < step ? 'bg-[#175b47]' : 'bg-[#dce6df]'}`}/>}</li>)}</ol>
+    <section className="rounded-2xl border bg-white p-5 shadow-sm sm:p-7 md:p-10">
+      {auctionId ? <Complete auctionId={auctionId}/> : <>{step === 0 && <Organization draft={draft} update={update}/>}
+        {step === 1 && <AuctionDetails draft={draft} update={update}/>}
+        {step === 2 && <Items items={draft.items} addItem={addItem} editItem={editItem} removeItem={removeItem}/>}
+        {step === 3 && <Payment draft={draft} update={update} organizationShare={organizationShare} bidderShare={bidderShare}/>}
+        {step === 4 && <Review draft={draft} organizationShare={organizationShare} bidderShare={bidderShare}/>}
+        {error && <p role="alert" className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        <footer className="mt-9 flex items-center justify-between gap-4 border-t pt-6"><div>{step > 0 && <Button type="button" variant="ghost" onClick={() => { setError(''); setStep(current => current - 1); }}><ArrowLeft size={16}/>Back</Button>}</div>{step < 4 ? <Button type="button" className="h-11 px-5" onClick={next}>Continue <ArrowRight size={16}/></Button> : <Button type="button" className="h-11 px-5" disabled={busy} onClick={launch}>{busy ? 'Launching…' : 'Launch fundraiser'} <ArrowRight size={16}/></Button>}</footer>
+      </>}
+    </section><p className="mt-6 text-center text-xs text-muted-foreground">Simple setup now. Advanced options stay out of your way.</p>
+  </div></main>;
 }
 
-function Feature({ text }: { text: string }) { return <div className="flex items-center gap-3"><CheckCircle2 size={17} className="text-[#2f7d5b]"/><span>{text}</span></div>; }
+function Heading({ step, title, copy }: { step: string; title: string; copy: string }) { return <><p className="eyebrow mb-3 text-[#648371]">{step}</p><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1><p className="mt-3 max-w-xl leading-relaxed text-muted-foreground">{copy}</p></>; }
+function Organization({ draft, update }: { draft: Draft; update: (changes: Partial<Draft>) => void }) { return <div className="max-w-xl"><Heading step="STEP 1 OF 5" title="Your organization." copy="Start with the essentials. You can update this later."/><div className="mt-8 space-y-5"><label className="block text-sm font-medium">Organization name<Input autoFocus className="mt-2 h-12" value={draft.organization} onChange={event => update({ organization: event.target.value })} placeholder="Community Arts Foundation"/></label><label className="block text-sm font-medium">Your name<Input className="mt-2 h-12" value={draft.contactName} onChange={event => update({ contactName: event.target.value })} placeholder="Alex Morgan"/></label><label className="block text-sm font-medium">Email address<Input className="mt-2 h-12" type="email" value={draft.email} onChange={event => update({ email: event.target.value })} placeholder="alex@organization.org"/></label></div></div>; }
+function AuctionDetails({ draft, update }: { draft: Draft; update: (changes: Partial<Draft>) => void }) { return <div className="max-w-xl"><Heading step="STEP 2 OF 5" title="Your auction details." copy="Name the event and, if you know them, add your auction dates."/><div className="mt-8 space-y-5"><label className="block text-sm font-medium">Auction name<Input autoFocus className="mt-2 h-12" value={draft.auctionName} onChange={event => update({ auctionName: event.target.value })} placeholder="Annual Giving Auction"/></label><div className="grid gap-5 sm:grid-cols-2"><label className="block text-sm font-medium">Auction opens <span className="font-normal text-muted-foreground">(optional)</span><Input className="mt-2 h-12" type="date" value={draft.auctionDate} onChange={event => update({ auctionDate: event.target.value })}/></label><label className="block text-sm font-medium">Auction closes <span className="font-normal text-muted-foreground">(optional)</span><Input className="mt-2 h-12" type="date" value={draft.closeDate} onChange={event => update({ closeDate: event.target.value })}/></label></div></div></div>; }
+function Items({ items, addItem, editItem, removeItem }: { items: Item[]; addItem: () => void; editItem: (id: string, changes: Partial<Item>) => void; removeItem: (id: string) => void }) { return <div className="max-w-xl"><Heading step="STEP 3 OF 5" title="Add a few auction items." copy="Start with what you have. You can add images, donors, and full details after launch."/><div className="mt-8 space-y-3">{items.map((item, index) => <div key={item.id} className="grid grid-cols-[1fr_7rem_2.75rem] gap-2"><Input className="h-12" value={item.title} onChange={event => editItem(item.id, { title: event.target.value })} placeholder={`Item ${index + 1} title`}/><Input className="h-12" inputMode="numeric" value={item.value} onChange={event => editItem(item.id, { value: event.target.value })} placeholder="Value"/><Button type="button" variant="outline" className="h-12 px-0" onClick={() => removeItem(item.id)} aria-label="Remove item"><Trash2 size={16}/></Button></div>)}{items.length === 0 && <div className="rounded-xl border border-dashed bg-[#fafcfb] p-6 text-sm text-muted-foreground">No items yet is okay. You can add them in your workspace after launch.</div>}<Button type="button" variant="outline" onClick={addItem}><Plus size={16}/>Add an item</Button></div></div>; }
+function Payment({ draft, update, organizationShare, bidderShare }: { draft: Draft; update: (changes: Partial<Draft>) => void; organizationShare: number; bidderShare: number }) { const pick = (commissionPayer: Draft['commissionPayer']) => update({ commissionPayer }); return <div className="max-w-xl"><Heading step="STEP 4 OF 5" title="Payment & fees." copy="Gather charges a 5% platform commission on eligible auction transactions. Payment processing fees are shown separately at checkout."/><div className="mt-8 grid gap-3"><Fee active={draft.commissionPayer === 'organizer'} title="Organization covers the 5%" copy="The nonprofit absorbs the platform commission." onClick={() => pick('organizer')}/><Fee active={draft.commissionPayer === 'split'} title="Split the 5%" copy="Choose how the platform commission is divided." onClick={() => pick('split')}/><Fee active={draft.commissionPayer === 'bidder'} title="Winning bidder covers the 5%" copy="The platform commission is added to eligible winning invoices." onClick={() => pick('bidder')}/></div>{draft.commissionPayer === 'split' && <div className="mt-5 rounded-xl bg-[#f5f8f6] p-4"><label className="block text-sm font-medium">Organization share of the 5% commission<Input className="mt-2 h-12" type="number" min="0" max="100" value={draft.organizerShare} onChange={event => update({ organizerShare: event.target.value })}/></label><p className="mt-2 text-sm text-muted-foreground">Organization: {organizationShare}% · Winning bidder: {bidderShare}%</p></div>}</div>; }
+function Fee({ active, title, copy, onClick }: { active: boolean; title: string; copy: string; onClick: () => void }) { return <button type="button" onClick={onClick} className={`min-h-20 rounded-xl border p-4 text-left transition-colors ${active ? 'border-[#175b47] bg-[#eaf1ed]' : 'hover:border-[#a8beae]'}`}><span className="block font-medium">{title}</span><span className="mt-1 block text-sm text-muted-foreground">{copy}</span></button>; }
+function Review({ draft, organizationShare, bidderShare }: { draft: Draft; organizationShare: number; bidderShare: number }) { const allocation = draft.commissionPayer === 'organizer' ? 'Organization covers 100%' : draft.commissionPayer === 'bidder' ? 'Winning bidder covers 100%' : `Organization ${organizationShare}% · Winning bidder ${bidderShare}%`; return <div className="max-w-xl"><span className="mb-6 inline-flex rounded-2xl bg-[#eaf1ed] p-4 text-[#175b47]"><Sparkles size={26}/></span><Heading step="STEP 5 OF 5" title="Ready to launch." copy="Review the essentials. You can refine every detail from your workspace afterward."/><dl className="mt-8 divide-y rounded-xl border"><Summary label="Organization" value={draft.organization}/><Summary label="Contact" value={`${draft.contactName} · ${draft.email}`}/><Summary label="Auction" value={draft.auctionName}/><Summary label="Items to add" value={draft.items.length ? `${draft.items.length} item${draft.items.length === 1 ? '' : 's'}` : 'Add after launch'}/><Summary label="5% commission" value={allocation}/></dl><p className="mt-5 flex gap-2 text-xs leading-relaxed text-muted-foreground"><CircleHelp size={15} className="mt-0.5 shrink-0"/>Payment processing fees remain separate from Gather’s platform commission and will be disclosed to the responsible payer.</p></div>; }
+function Summary({ label, value }: { label: string; value: string }) { return <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:gap-4"><dt className="text-sm text-muted-foreground">{label}</dt><dd className="text-sm font-medium">{value}</dd></div>; }
+function Complete({ auctionId }: { auctionId: string }) { const url = typeof window === 'undefined' ? '' : `${window.location.origin}/?auction=${auctionId}`; return <div className="max-w-xl"><span className="mb-7 inline-flex rounded-2xl bg-[#eaf1ed] p-4 text-[#175b47]"><CheckCircle2 size={28}/></span><p className="eyebrow mb-3 text-[#648371]">YOUR FUNDRAISER IS READY</p><h1 className="text-3xl font-semibold tracking-tight">Your auction has a home.</h1><p className="mt-4 leading-relaxed text-muted-foreground">Your workspace is ready. Add the final item details and share your auction when it feels right.</p><div className="mt-7 rounded-xl bg-[#f5f8f6] p-4"><p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Your auction link</p><p className="mt-2 break-all text-sm font-medium">{url}</p></div><div className="mt-8 flex flex-wrap gap-3"><Button asChild><a href={`/admin?auction=${auctionId}`}>Open workspace <ArrowRight size={16}/></a></Button><Button variant="outline" asChild><a href={`/?auction=${auctionId}`}>View auction</a></Button></div></div>; }
