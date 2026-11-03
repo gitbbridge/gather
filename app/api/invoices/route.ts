@@ -12,7 +12,10 @@ export async function GET() {
     const { data, error } = await createSupabaseAdminClient().from('winner_invoices').select(`
       id,status,currency,hammer_subtotal_cents,bidder_platform_fee_cents,total_due_cents,due_at,paid_at,created_at,
       auctions(name,organization_id),
-      winner_invoice_items(id,hammer_price_cents,bidder_fee_cents,auction_items(title,source))
+      winner_invoice_items(id,hammer_price_cents,bidder_fee_cents,
+        auction_items(title,source,travel_package_snapshot),
+        fulfillments(id,status,traveler_claims(id,submitted_at))
+      )
     `).eq('payer_id', user.userId).order('created_at', { ascending: false });
     if (error) throw error;
     const invoices = (data || []).map(invoice => {
@@ -29,7 +32,9 @@ export async function GET() {
         paidAt: invoice.paid_at,
         items: (invoice.winner_invoice_items || []).map(line => {
           const item = Array.isArray(line.auction_items) ? line.auction_items[0] : line.auction_items;
-          return { id: line.id, title: item?.title || 'Auction item', source: item?.source || 'custom', hammerPriceCents: line.hammer_price_cents, bidderFeeCents: line.bidder_fee_cents };
+          const fulfillment = Array.isArray(line.fulfillments) ? line.fulfillments[0] : line.fulfillments;
+          const claim = Array.isArray(fulfillment?.traveler_claims) ? fulfillment.traveler_claims[0] : fulfillment?.traveler_claims;
+          return { id: line.id, title: item?.title || 'Auction item', source: item?.source || 'custom', hammerPriceCents: line.hammer_price_cents, bidderFeeCents: line.bidder_fee_cents, travelTerms:item?.travel_package_snapshot||null, fulfillment:fulfillment?{id:fulfillment.id,status:fulfillment.status,claimSubmittedAt:claim?.submitted_at||null}:null };
         }),
       };
     });

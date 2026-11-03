@@ -22,6 +22,8 @@ export async function processStripeEvent(event: Stripe.Event) {
         const paymentIntent = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
         const { error } = await client.from('winner_invoices').update({ status: 'paid', stripe_payment_intent_id: paymentIntent || null, paid_at: new Date().toISOString() }).eq('id', invoiceId).eq('stripe_checkout_session_id', session.id);
         if (error) throw error;
+        const { error: fulfillmentError } = await client.rpc('activate_paid_fulfillments', { target_invoice_id: invoiceId });
+        if (fulfillmentError) throw fulfillmentError;
       }
     } else if (event.type === 'checkout.session.async_payment_failed') {
       const session = event.data.object as Stripe.Checkout.Session;

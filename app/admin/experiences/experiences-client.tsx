@@ -1,0 +1,19 @@
+'use client';
+import {useCallback,useEffect,useState} from 'react';
+import {useSearchParams} from 'next/navigation';
+import {ArrowLeft,Leaf,LoaderCircle,Trash2} from 'lucide-react';
+import {GiveHolidaysExperiences} from '@/app/give-holidays-experiences';
+import {Button} from '@/components/ui/button';
+import {toast,Toaster} from 'sonner';
+
+type AuctionItem={id:string;title:string;source?:string;isPublished?:boolean;bidCount:number};
+export default function ExperiencesClient(){
+ const params=useSearchParams(),auction=params.get('auction')||'';
+ const [busy,setBusy]=useState(false),[items,setItems]=useState<AuctionItem[]>([]);
+ const load=useCallback(async()=>{if(!auction)return;const response=await fetch(`/api/auction?id=${encodeURIComponent(auction)}`);const result=await response.json() as {error?:string;state?:{items:AuctionItem[]}};if(response.ok)setItems((result.state?.items||[]).filter(item=>item.source==='give-holidays'))},[auction]);
+ useEffect(()=>{void load()},[load]);
+ const act=async(action:string,values:Record<string,unknown>)=>{if(!auction){toast.error('Choose an auction from the dashboard first.');return false}setBusy(true);try{const response=await fetch('/api/auction',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,id:auction,key:crypto.randomUUID(),...values})});const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error||'Unable to update package.');await load();return true}catch(error){toast.error(error instanceof Error?error.message:'Unable to update package.');return false}finally{setBusy(false)}};
+ return <main className="min-h-screen bg-[#f8faf9] px-4 py-6 sm:px-8"><Toaster richColors/><div className="mx-auto max-w-7xl"><header className="flex flex-wrap items-center justify-between gap-4"><a href={`/admin${auction?`?auction=${encodeURIComponent(auction)}`:''}`} className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><ArrowLeft size={15}/>Manage auction items</a><a href="/" className="flex items-center gap-2 text-xl font-semibold text-[#175b47]"><Leaf size={20}/>gather.</a></header><div className="mt-8 mb-7"><h1 className="text-3xl font-semibold tracking-tight">Manage auction items</h1><p className="mt-2 text-muted-foreground">Add controlled Give Holidays packages without changing their core travel terms.</p><div className="mt-5 inline-flex rounded-lg border bg-white p-1"><a className="rounded-md px-4 py-2 text-sm font-medium" href={`/admin${auction?`?auction=${encodeURIComponent(auction)}`:''}`}>Auction items</a><span className="rounded-md bg-[#175b47] px-4 py-2 text-sm font-medium text-white">Give Holidays Experiences</span></div></div>
+ {items.length>0&&<section className="mb-8 rounded-xl border bg-white p-5"><h2 className="font-semibold">Packages in this auction</h2><div className="mt-4 divide-y">{items.map(item=><div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{item.isPublished===false?'Draft':'Published'} · {item.bidCount} bids</p></div><div className="flex gap-2"><Button size="sm" variant="outline" disabled={busy||item.bidCount>0} onClick={()=>act('publish_item',{item:item.id,publish:item.isPublished===false})}>{busy?<LoaderCircle className="animate-spin"/>:null}{item.isPublished===false?'Publish':'Move to draft'}</Button><Button size="sm" variant="outline" disabled={busy||item.bidCount>0} onClick={()=>act('remove_item',{item:item.id})}><Trash2 size={14}/>Remove</Button></div></div>)}</div></section>}
+ {auction?<GiveHolidaysExperiences canEdit busy={busy} onAdd={values=>act('travel_item',values)}/>:<div className="rounded-xl border bg-white p-8 text-sm text-muted-foreground">Open an auction from the dashboard, then choose the Give Holidays Experiences tab.</div>}</div></main>
+}

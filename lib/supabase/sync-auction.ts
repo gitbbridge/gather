@@ -37,6 +37,14 @@ export async function syncCreatedAuctionToSupabase(input: SyncAuctionInput) {
   }, { onConflict: 'id' });
   if (auctionError) throw auctionError;
 
+  const { data: existingItems, error: existingItemsError } = await client.from('auction_items').select('id').eq('auction_id', input.auctionId);
+  if (existingItemsError) throw existingItemsError;
+  const currentIds = new Set(input.auction.items.map(item => item.id));
+  const removedIds = (existingItems || []).map(row => row.id).filter(id => !currentIds.has(id));
+  if (removedIds.length) {
+    const { error: removeError } = await client.from('auction_items').delete().in('id', removedIds);
+    if (removeError) throw removeError;
+  }
   if (!input.auction.items.length) return;
   const codes = input.auction.items.map(item => item.giveHolidaysPackageCode).filter((value): value is string => Boolean(value));
   const packages = codes.length
@@ -62,19 +70,48 @@ export async function syncCreatedAuctionToSupabase(input: SyncAuctionInput) {
       give_holidays_package_code: item.giveHolidaysPackageCode || null,
       travel_package_id: travelPackage?.id || null,
       travel_package_snapshot: travelPackage ? {
-        providerCode: travelPackage.provider_code,
         title: travelPackage.title,
         destination: travelPackage.destination,
         region: travelPackage.region,
-        wholesaleCostCents: travelPackage.wholesale_cost_cents,
-        platformMarkupCents: travelPackage.platform_markup_cents,
+        category: travelPackage.category,
+        cardDescription: travelPackage.card_description || travelPackage.summary,
+        fullDescription: travelPackage.full_description || travelPackage.summary,
+        heroImageUrl: travelPackage.hero_image_url || travelPackage.image_url,
+        galleryUrls: travelPackage.gallery_urls || [],
         fairMarketValueCents: travelPackage.fair_market_value_cents,
+        included: travelPackage.included,
+        notIncluded: travelPackage.not_included,
+        stayLength: travelPackage.stay_length,
+        occupancy: travelPackage.occupancy,
+        roomType: travelPackage.room_type,
+        expirationDate: travelPackage.expiration_date,
+        bookingLeadTimeDays: travelPackage.booking_lead_time_days,
+        requiredTravelerDetails: travelPackage.required_traveler_details,
+        cancellationTerms: travelPackage.cancellation_terms,
+        refundTerms: travelPackage.refund_terms,
+        redemptionInstructions: travelPackage.redemption_instructions,
         terms: travelPackage.terms,
       } : null,
       position,
-      is_published: false,
+      is_published: item.isPublished !== false,
     };
   });
   const { error: itemsError } = await client.from('auction_items').upsert(rows, { onConflict: 'id' });
   if (itemsError) throw itemsError;
+  const settlementRows = rows.filter(row => row.travel_package_id).map(row => {
+    const travelPackage = packageByCode.get(row.give_holidays_package_code!);
+    return {
+      auction_item_id: row.id,
+      travel_package_id: row.travel_package_id!,
+      wholesale_cost_cents: Number(travelPackage?.wholesale_cost_cents || 0),
+      gather_markup_cents: Number(travelPackage?.platform_markup_cents || 0),
+      supplier_name: travelPackage?.supplier_name || null,
+      supplier_reference: travelPackage?.supplier_reference || null,
+      internal_notes: travelPackage?.internal_notes || null,
+    };
+  });
+  if (settlementRows.length) {
+    const { error: settlementError } = await client.from('auction_item_settlements').upsert(settlementRows, { onConflict: 'auction_item_id' });
+    if (settlementError) throw settlementError;
+  }
 }

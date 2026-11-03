@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const { data: invoice, error } = await client.from('winner_invoices').select(`
       id,status,currency,total_due_cents,auction_id,payer_id,stripe_checkout_session_id,
       auctions(name,organization_id),
-      winner_invoice_items(id,hammer_price_cents,platform_fee_cents,bidder_fee_cents,give_holidays_markup_cents,give_holidays_wholesale_cost_cents,auction_items(title))
+      winner_invoice_items(id,hammer_price_cents,platform_fee_cents,bidder_fee_cents,give_holidays_markup_cents,give_holidays_wholesale_cost_cents,auction_items(title,source,travel_package_id))
     `).eq('id', parsed.data.invoiceId).single();
     if (error || !invoice) return json({ error: 'Invoice not found.' }, 404);
     if (invoice.payer_id !== user.userId) return json({ error: 'Access denied.' }, 403);
@@ -40,6 +40,17 @@ export async function POST(request: Request) {
     }
 
     const lines = invoice.winner_invoice_items || [];
+    const travelPackageIds = lines.flatMap(line => {
+      const item = Array.isArray(line.auction_items) ? line.auction_items[0] : line.auction_items;
+      return item?.source === 'give_holidays' && item.travel_package_id ? [item.travel_package_id] : [];
+    });
+    if (travelPackageIds.length) {
+      const { data: packages, error: packageError } = await client.from('travel_packages').select('id,inventory_total,inventory_sold,status').in('id', travelPackageIds);
+      if (packageError) throw packageError;
+      if ((packages || []).length !== new Set(travelPackageIds).size || (packages || []).some(pkg => pkg.status === 'sold_out' || pkg.inventory_sold >= pkg.inventory_total)) {
+        return json({ error: 'A travel package on this invoice is no longer available. Contact the organizer before paying.' }, 409);
+      }
+    }
     const bidderFeeCents = lines.reduce((sum, line) => sum + Number(line.bidder_fee_cents || 0), 0);
     const applicationFeeCents = lines.reduce((sum, line) => sum + Number(line.platform_fee_cents || 0) + Number(line.give_holidays_markup_cents || 0) + Number(line.give_holidays_wholesale_cost_cents || 0), 0);
     if (applicationFeeCents > invoice.total_due_cents) return json({ error: 'This invoice requires organizer review before payment.' }, 409);
