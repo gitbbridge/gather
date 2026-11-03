@@ -10,9 +10,9 @@ export const metadata = { title: 'Sign in | Gather' };
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ return_to?: string }>;
+  searchParams: Promise<{ return_to?: string; mode?: string; error?: string }>;
 }) {
-  const { return_to: requestedReturn = '/' } = await searchParams;
+  const { return_to: requestedReturn = '/', mode, error } = await searchParams;
   const returnTo = safeReturnPath(requestedReturn);
   if (await getAppUser()) redirect(returnTo);
 
@@ -29,7 +29,7 @@ export default async function AuthPage({
             Create auctions, manage your nonprofit page, and keep your bidder activity in one secure account.
           </p>
           {isSupabaseConfigured ? (
-            <AuthForm returnTo={returnTo} />
+            <AuthForm returnTo={returnTo} initialMode={mode === 'forgot' ? 'forgot' : mode === 'signup' ? 'signup' : 'signin'} initialMessage={error === 'expired_reset' ? 'That password-reset link is invalid or has expired. Request a new one below.' : error === 'callback' ? 'We could not complete that secure sign-in link. Please try again.' : ''} />
           ) : (
             <div className="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
               Supabase is connected to the project URL, but the publishable key is still needed. Add

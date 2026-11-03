@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-export function AuthForm({ returnTo }: { returnTo: string }) {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+export function AuthForm({ returnTo, initialMode = 'signin', initialMessage = '' }: { returnTo: string; initialMode?: 'signin' | 'signup' | 'forgot'; initialMessage?: string }) {
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialMessage);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,7 +26,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
         const redirectTo = `${window.location.origin}/auth/callback?return_to=${encodeURIComponent('/auth/update-password')}`;
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
         if (error) throw error;
-        setMessage('If an account exists for that email, a password-reset link is on its way. Check your inbox and spam folder.');
+        setMessage('If an account exists for that email, a password-reset link is on its way. Use the newest link and check your spam folder.');
         return;
       }
       if (mode === 'signin') {
@@ -79,7 +79,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
         </Button>
       </form>
-      {message && <p className="mt-4 text-sm leading-6" role="status">{message}</p>}
+      {message && <p className={`mt-4 rounded-lg p-3 text-sm leading-6 ${/invalid|expired|unable|could not|error/i.test(message) ? 'bg-red-50 text-red-800' : 'bg-[#f5f8f6] text-[#244c3e]'}`} role="status">{message}</p>}
       <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
         By continuing, you agree to use Gather responsibly and only on behalf of organizations you are authorized to represent.
       </p>
