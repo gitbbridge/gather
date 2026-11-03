@@ -30,5 +30,6 @@ test('split commission and Give Holidays markup stay separately auditable', () =
   assert.equal(payment.giveHolidaysMarkupCents, 25_000);
   assert.equal(payment.bidderTotalCents, 37_715);
   assert.equal(payment.organizerGrossCents, 12_098);
+  assert.equal(payment.applicationFeeCents, 25_617);
   assert.equal(payment.organizerFeeCents + payment.bidderFeeCents, payment.platformFeeCents);
 });

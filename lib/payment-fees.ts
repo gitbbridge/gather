@@ -13,6 +13,6 @@ export function calculateAuctionPayment(hammerPriceCents: number, organizerShare
     giveHolidaysMarkupCents,
     bidderTotalCents: hammerPriceCents + bidderFeeCents + giveHolidaysMarkupCents,
     organizerGrossCents: hammerPriceCents - organizerFeeCents,
-    applicationFeeCents: platformFeeCents,
+    applicationFeeCents: platformFeeCents + giveHolidaysMarkupCents,
   };
 }
