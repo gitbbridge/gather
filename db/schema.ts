@@ -33,3 +33,19 @@ export const closeoutRecords = sqliteTable('closeout_records', {
   followupStatus: text('followup_status').notNull().default('not_sent'),
   updatedAt: integer('updated_at').notNull(),
 }, t => [primaryKey({columns:[t.auctionId,t.userId]}),index('idx_closeout_auction').on(t.auctionId)]);
+
+export const stripeWebhookEvents = sqliteTable('stripe_webhook_events', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  objectId: text('object_id'),
+  accountId: text('account_id'),
+  livemode: integer('livemode', { mode: 'boolean' }).notNull(),
+  status: text('status').notNull().default('accepted'),
+  stripeCreatedAt: integer('stripe_created_at').notNull(),
+  receivedAt: integer('received_at').notNull(),
+  processedAt: integer('processed_at'),
+  lastError: text('last_error'),
+}, t => [
+  index('idx_stripe_events_status').on(t.status),
+  index('idx_stripe_events_created').on(t.stripeCreatedAt),
+]);

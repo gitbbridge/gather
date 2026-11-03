@@ -167,6 +167,16 @@ Gather can use Supabase Auth while the existing D1 data layer is migrated in sta
 
 The migration enables Row Level Security, creates auth-linked profiles, nonprofit organizations and memberships, normalized auctions and items, bidder registrations and bids, and transaction fields that keep the 5% platform commission, payment-processing fees, and Give Holidays markup separately auditable. Full EIN values are intentionally not stored; the payment provider should collect them.
 
+## Stripe webhook development
+
+Add the test-mode Stripe keys and the CLI listener's signing secret to `.env.local`, then restart the development server. Forward only the events Gather is preparing to handle:
+
+```sh
+stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,payment_intent.succeeded,payment_intent.payment_failed,charge.refunded --forward-to http://localhost:5173/api/stripe/webhook
+```
+
+The signing secret printed by that command belongs in `STRIPE_WEBHOOK_SECRET`. The webhook verifies the unmodified request body and `Stripe-Signature`, stores only minimal event metadata, and ignores replayed event IDs. It currently accepts events for later processing; payment settlement and fulfillment must not be enabled until event-specific handlers are implemented and tested.
+
 When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 
 The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
