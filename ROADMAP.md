@@ -17,6 +17,13 @@ Gather is a private, mobile-first test application for nonprofit silent auctions
 
 The application is **not approved for real-money production auctions**. Current payment, donation, purchase and follow-up activity remains clearly labeled as test activity.
 
+## Approved business model and onboarding
+
+- 5% platform commission on eligible auction transactions, paid by the organizer, the winning bidder, or split using an organizer-configured allocation.
+- Give Holidays travel-package markup is separate and included in displayed package pricing.
+- Payment processing fees remain separate and are disclosed independently.
+- Five-step organizer setup: Organization → Auction Details → Add Items → Payment & Fees → Review & Launch, with autosaved drafts, one primary action per step, and minimal visual clutter.
+
 ## Phase 1 — Required before public launch
 
 These priorities retain the order documented in `LAUNCH-READINESS.md`:

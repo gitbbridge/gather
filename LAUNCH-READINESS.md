@@ -6,6 +6,13 @@ Working private test application built with React, TypeScript, Tailwind CSS 4, a
 
 This is a functional test foundation, **not approved for real-money production auctions**. Every bid, donation, and buy-now reservation is labeled as test activity. Payments are intentionally not collected. Site access is owner-private.
 
+## Approved product and revenue direction
+
+- Gather charges a 5% platform commission on eligible auction transactions. Organizers can cover it, pass it to winning bidders, or split it with a configurable allocation.
+- Payment processing fees are separate from the platform commission and must be disclosed separately to the responsible payer.
+- Give Holidays travel packages carry a separate package markup included in their displayed package pricing.
+- Organizer onboarding follows five autosaved steps: Organization → Auction Details → Add Items → Payment & Fees → Review & Launch. Each step keeps one primary action and the existing Gather visual direction.
+
 ## Implemented
 
 - Responsive bidder and organizer shell; searchable catalog, categories, sorting, item details and donor credits.
