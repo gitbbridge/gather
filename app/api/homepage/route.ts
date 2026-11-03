@@ -1,4 +1,4 @@
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { getAppUser } from '@/lib/auth';
 import { database, publicNonprofit, type Nonprofit } from '@/lib/nonprofits';
 import { defaultHomepage, homepageConfigSchema, homepageReadiness, parseHomepage } from '@/lib/homepage';
 import type { Auction } from '@/lib/auction';
@@ -19,7 +19,7 @@ async function auctionRows(nonprofitId: string) {
 
 export async function GET(request: Request) {
   try {
-    const user = await getChatGPTUser();
+    const user = await getAppUser();
     if (!user) return json({ error: 'Sign in to edit a homepage.' }, 401);
     const nonprofit = await ownedNonprofit(user.userId, new URL(request.url).searchParams.get('nonprofit') || undefined);
     if (!nonprofit) return json({ error: 'Create a nonprofit page before opening the Homepage Builder.' }, 404);
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     if (request.headers.get('origin') !== new URL(request.url).origin) return json({ error: 'Invalid origin.' }, 403);
-    const user = await getChatGPTUser();
+    const user = await getAppUser();
     if (!user) return json({ error: 'Sign in to continue.' }, 401);
     const raw = await request.text();
     if (raw.length > 250_000) return json({ error: 'Homepage content is too large.' }, 413);

@@ -1,4 +1,4 @@
-import { getChatGPTUser } from '@/app/chatgpt-auth';
+import { getAppUser } from '@/lib/auth';
 import { database,nonprofitById,nonprofitBySlug,nonprofitInsert,publicNonprofit } from '@/lib/nonprofits';
 import { z } from 'zod';
 export const dynamic='force-dynamic';
@@ -10,7 +10,7 @@ const form=z.discriminatedUnion('action',[
 const json=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 export async function POST(req:Request){try{
  if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'Invalid origin.'},403);
- const user=await getChatGPTUser();if(!user)return json({error:'Sign in to register.'},401);
+ const user=await getAppUser();if(!user)return json({error:'Sign in to register.'},401);
  const raw=await req.text();if(raw.length>12000)return json({error:'Request too large.'},413);
  const parsed=form.safeParse(JSON.parse(raw));if(!parsed.success)return json({error:'Please complete all fields.'},400);const x=parsed.data;const db=database();
  if(x.action==='setup'){

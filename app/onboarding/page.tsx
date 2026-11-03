@@ -1,4 +1,4 @@
-import { requireChatGPTUser } from '@/app/chatgpt-auth';
+import { requireAppUser } from '@/lib/auth';
 import OnboardingClient from './onboarding-client';
 export const dynamic = 'force-dynamic';
-export default async function OnboardingPage() { await requireChatGPTUser('/onboarding'); return <OnboardingClient />; }
+export default async function OnboardingPage() { await requireAppUser('/onboarding'); return <OnboardingClient />; }

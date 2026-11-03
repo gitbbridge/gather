@@ -116,6 +116,17 @@ Replace the filename with the pending migration and `DB` with your D1 binding na
 - `npm run start`: preview the built Worker locally with D1/R2 support
 - `npm run db:generate`: generate Drizzle migrations after schema changes
 
+## Supabase authentication and schema
+
+Gather can use Supabase Auth while the existing D1 data layer is migrated in stages.
+
+1. Copy `.env.example` to `.env.local` and add the project's publishable key.
+2. Apply `supabase/migrations/202611030001_initial_auth_and_auction_schema.sql` in the Supabase SQL editor, or link the project and run `supabase db push`.
+3. Add `http://localhost:5173/auth/callback` as an allowed Auth redirect URL for local email confirmation.
+4. Restart the development server after changing environment variables.
+
+The migration enables Row Level Security, creates auth-linked profiles, nonprofit organizations and memberships, normalized auctions and items, bidder registrations and bids, and transaction fields that keep the 5% platform commission, payment-processing fees, and Give Holidays markup separately auditable. Full EIN values are intentionally not stored; the payment provider should collect them.
+
 When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 
 The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.

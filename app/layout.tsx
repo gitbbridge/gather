@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Gather | Auctions that give back",
   description: "Discover meaningful experiences, bid for a cause, and manage your nonprofit's silent auctions.",
-  other: {
-    "codex-preview": "development",
-  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
