@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, ArrowUpRight, CheckCircle2, CircleAlert, ClipboardCheck, Clock3, Download, ExternalLink, History, LayoutTemplate, Users } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, CheckCircle2, CircleAlert, ClipboardCheck, Clock3, CreditCard, Download, ExternalLink, History, LayoutTemplate, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
@@ -8,12 +8,15 @@ type AdminDashboardProps = {
   auction: { name: string; organization: string; items: number; bidders: number; bids: number; total: string; goal: string; progress: number; paused: boolean; ends: string };
   previousAuctions: { id: string; name: string; organization: string; status: 'open' | 'scheduled' | 'paused' | 'closed'; items: number; bids: number; total: string; endsLabel: string }[];
   nonprofit?: { name: string; slug: string } | null;
+  payment?: { status: 'not_connected' | 'pending' | 'ready' | 'restricted'; cardPaymentsStatus: string; payoutsStatus: string; livemode: boolean } | null;
+  connectingPayments: boolean;
   onManageItems: () => void;
   onManagePage: () => void;
   onCreateAuction: () => void;
   onExport: () => void;
   onCloseout: () => void;
   onHomepage: () => void;
+  onConnectPayments: () => void;
   onOpenAuction: (auctionId: string) => void;
   onViewAuction: (auctionId: string) => void;
 };
@@ -23,11 +26,12 @@ type AdminDashboardProps = {
 // - data-display/stats/with_trending.jsx for compact metric cards
 // - headings/section-headings/with_actions.jsx for action-led section headers
 // - layout/list-containers/separate_cards.jsx for operational checklists
-export function AdminDashboard({ auction, previousAuctions, nonprofit, onManageItems, onManagePage, onCreateAuction, onExport, onCloseout, onHomepage, onOpenAuction, onViewAuction }: AdminDashboardProps) {
+export function AdminDashboard({ auction, previousAuctions, nonprofit, payment, connectingPayments, onManageItems, onManagePage, onCreateAuction, onExport, onCloseout, onHomepage, onConnectPayments, onOpenAuction, onViewAuction }: AdminDashboardProps) {
   const checks = [
     { label: 'Homepage', detail: nonprofit ? 'Edit and publish your public homepage' : 'Create your public page', done: Boolean(nonprofit), action: nonprofit ? onHomepage : onManagePage },
     { label: 'Auction items', detail: auction.items ? `${auction.items} items listed` : 'Add your first item', done: auction.items > 0, action: onManageItems },
     { label: 'Bidder access', detail: 'Registration is required before bidding', done: true, action: onManagePage },
+    { label: 'Payments', detail: payment?.status === 'ready' ? 'Stripe is ready for winning-bid payments' : payment?.status === 'pending' ? 'Finish Stripe verification' : 'Connect the nonprofit’s Stripe account', done: payment?.status === 'ready', action: onConnectPayments },
   ];
 
   return <div className="space-y-8">
@@ -64,7 +68,7 @@ export function AdminDashboard({ auction, previousAuctions, nonprofit, onManageI
       </article>)}</div> : <div className="px-6 py-10 text-center"><History className="mx-auto text-muted-foreground"/><p className="mt-3 font-medium">No previous auctions yet</p><p className="mt-1 text-sm text-muted-foreground">Earlier auctions will stay available here.</p></div>}
     </section>
 
-    <div className="grid gap-6 md:grid-cols-2"><section className="panel"><div className="flex items-start gap-3"><Clock3 className="text-primary mt-0.5" size={19}/><div><h2 className="font-semibold">Ready for your own fundraiser?</h2><p className="text-sm text-muted-foreground mt-2">Create another auction under the same nonprofit page for seasonal campaigns, galas, or year-round giving.</p><Button variant="link" className="px-0 mt-3" onClick={onCreateAuction}>Create an auction <ArrowUpRight size={15}/></Button></div></div></section><section className="panel"><div className="flex items-start gap-3"><CircleAlert className="text-amber-600 mt-0.5" size={19}/><div><h2 className="font-semibold">Before collecting real funds</h2><p className="text-sm text-muted-foreground mt-2">Connect payments, public bidder accounts, email/SMS, settlement, refunds, and payout reconciliation before launch.</p><Button variant="link" className="px-0 mt-3" onClick={onManagePage}>Review nonprofit page <ArrowUpRight size={15}/></Button></div></div></section></div>
+    <div className="grid gap-6 md:grid-cols-2"><section className="panel"><div className="flex items-start gap-3"><Clock3 className="text-primary mt-0.5" size={19}/><div><h2 className="font-semibold">Ready for your own fundraiser?</h2><p className="text-sm text-muted-foreground mt-2">Create another auction under the same nonprofit page for seasonal campaigns, galas, or year-round giving.</p><Button variant="link" className="px-0 mt-3" onClick={onCreateAuction}>Create an auction <ArrowUpRight size={15}/></Button></div></div></section><section className="panel"><div className="flex items-start gap-3"><CreditCard className="text-primary mt-0.5" size={19}/><div><h2 className="font-semibold">{payment?.status === 'ready' ? 'Payments connected' : 'Connect winning-bid payments'}</h2><p className="text-sm text-muted-foreground mt-2">{payment?.status === 'ready' ? `Stripe can accept payments and send payouts${payment.livemode ? '.' : ' in test mode.'}` : payment?.status === 'pending' ? 'Stripe still needs verification details before this nonprofit can accept payments and receive payouts.' : payment?.status === 'restricted' ? 'Stripe needs updated information before payments can be enabled.' : 'Stripe securely collects nonprofit verification and bank details. Gather never stores card or bank information.'}</p><Button variant={payment?.status === 'ready' ? 'outline' : 'default'} className="mt-4" onClick={onConnectPayments} disabled={!nonprofit || connectingPayments}>{connectingPayments ? 'Opening Stripe…' : payment?.status === 'ready' ? 'Review Stripe setup' : payment?.status === 'pending' || payment?.status === 'restricted' ? 'Continue Stripe setup' : 'Connect Stripe'} <ArrowUpRight size={15}/></Button><p className="mt-3 text-xs text-muted-foreground">Gather’s 5% fee is separate from Stripe processing fees.</p></div></div></section></div>
   </div>;
 }
 

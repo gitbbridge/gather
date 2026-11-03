@@ -49,3 +49,13 @@ export const stripeWebhookEvents = sqliteTable('stripe_webhook_events', {
   index('idx_stripe_events_status').on(t.status),
   index('idx_stripe_events_created').on(t.stripeCreatedAt),
 ]);
+
+export const nonprofitPaymentAccounts = sqliteTable('nonprofit_payment_accounts', {
+  nonprofitId: text('nonprofit_id').primaryKey().references(()=>nonprofits.id),
+  stripeAccountId: text('stripe_account_id').notNull().unique(),
+  status: text('status').notNull().default('pending'),
+  cardPaymentsStatus: text('card_payments_status').notNull().default('pending'),
+  payoutsStatus: text('payouts_status').notNull().default('pending'),
+  livemode: integer('livemode', { mode: 'boolean' }).notNull().default(false),
+  updatedAt: integer('updated_at').notNull(),
+}, t => [index('idx_payment_accounts_status').on(t.status)]);

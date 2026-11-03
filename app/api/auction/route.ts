@@ -3,6 +3,7 @@ import { getAppUser } from '@/lib/auth';
 import { Auction,bid,createAuction,publicState } from '@/lib/auction';
 import { z } from 'zod';
 import { nonprofitById,nonprofitInsert,isRegistered,publicNonprofit } from '@/lib/nonprofits';
+import { paymentConnection } from '@/lib/payments';
 export const dynamic='force-dynamic';
 const starterItem=z.object({title:z.string().trim().min(1).max(100),value:z.number().int().min(0).max(100000000),source:z.enum(['custom','give-holidays']).optional()});
 const input=z.object({action:z.enum(['create','bid','watch','donate','buy','settings','item']),id:z.string().max(100).optional(),item:z.string().max(100).optional(),amount:z.number().int().positive().max(100000000).optional(),key:z.string().uuid(),name:z.string().trim().min(2).max(100).optional(),organization:z.string().trim().min(2).max(100).optional(),nonprofitSlug:z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(48).optional(),nonprofitId:z.string().max(100).optional(),paused:z.boolean().optional(),title:z.string().trim().min(3).max(100).optional(),category:z.enum(['Getaways','Food & drink','Art & home','Wellness','Experiences']).optional(),description:z.string().trim().min(10).max(2000).optional(),donor:z.string().trim().min(2).max(100).optional(),start:z.number().int().min(100).max(100000000).optional(),value:z.number().int().min(100).max(100000000).optional(),openDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),closeDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),commissionPayer:z.enum(['organizer','split','bidder']).optional(),organizerShare:z.number().int().min(0).max(100).optional(),items:z.array(starterItem).max(25).optional()});
@@ -12,8 +13,9 @@ export async function GET(req:Request){try{const user=await getAppUser();const i
  const row=id?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(id).first<{id:string;owner:string;state:string;nonprofit_id:string|null}>():list.length?await db().prepare('SELECT * FROM auctions WHERE id=?').bind(list[0].id).first<{id:string;owner:string;state:string;nonprofit_id:string|null}>():null;
  if(id&&id!=='preview'&&!row)return json({error:'Auction not found.'},404);
  const nonprofit=row?.nonprofit_id?await nonprofitById(row.nonprofit_id):null;
+ const payment=nonprofit&&user&&nonprofit.owner===user.userId?await paymentConnection(nonprofit.id):null;
  const registered=!!user&&!!nonprofit&&(nonprofit.owner===user.userId||await isRegistered(nonprofit.id,user.userId));
- return json({nonprofit:nonprofit?publicNonprofit(nonprofit):null,registered,user:user?{name:user.displayName}:null,list,id:row?.id,owner:!!user&&row?.owner===user.userId,state:publicState(row?JSON.parse(row.state):createAuction(),user?.userId||'',!!user&&row?.owner===user.userId),demo:!row});}catch(e){console.error(e);return json({error:'Unable to load the auction. Please try again.'},503);}}
+ return json({nonprofit:nonprofit?publicNonprofit(nonprofit):null,payment,registered,user:user?{name:user.displayName}:null,list,id:row?.id,owner:!!user&&row?.owner===user.userId,state:publicState(row?JSON.parse(row.state):createAuction(),user?.userId||'',!!user&&row?.owner===user.userId),demo:!row});}catch(e){console.error(e);return json({error:'Unable to load the auction. Please try again.'},503);}}
 export async function POST(req:Request){try{
  const origin=req.headers.get('origin');if(!origin||origin!==new URL(req.url).origin)return json({error:'Invalid request origin.'},403);
  const user=await getAppUser();if(!user)return json({error:'Sign in to continue.'},401);
