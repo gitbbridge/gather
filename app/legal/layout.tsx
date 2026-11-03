@@ -1,0 +1,6 @@
+import type { ReactNode } from 'react';
+import { Leaf } from 'lucide-react';
+
+export default function LegalLayout({ children }: { children: ReactNode }) {
+  return <main className="min-h-screen bg-[#f8faf9]"><header className="border-b bg-white"><div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8"><a href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#175b47]"><span className="grid size-9 place-items-center rounded-full bg-[#175b47] text-white"><Leaf size={21}/></span>gather<span className="text-[#78a68b]">.</span></a><a href="/help" className="text-sm font-medium text-[#175b47] hover:underline">Help Center</a></div></header><div className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">{children}</div><footer className="border-t bg-white"><div className="mx-auto flex max-w-4xl flex-wrap gap-x-5 gap-y-2 px-5 py-6 text-xs text-muted-foreground sm:px-8"><a href="/legal/privacy" className="hover:text-[#175b47] hover:underline">Privacy Policy</a><a href="/legal/cookies" className="hover:text-[#175b47] hover:underline">Cookie Policy</a><a href="/legal/terms" className="hover:text-[#175b47] hover:underline">Terms of Service</a></div></footer></main>;
+}
