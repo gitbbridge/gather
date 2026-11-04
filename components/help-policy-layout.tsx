@@ -34,7 +34,16 @@ export function HelpPolicyLayout({ active, title, lede, status, children }: { ac
         <div className="mt-8">{children}</div>
       </article>
     </div>
-    <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-t px-5 py-7 text-xs text-[#718078] sm:px-8"><span>Gather · Good auctions, made simple.</span><span>Help and policy information</span></footer>
+    <footer className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 border-t px-5 py-7 text-xs text-[#718078] sm:px-8">
+      <span>Gather · Good auctions, made simple.</span>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <Link href="/about/give-holidays" className="hover:text-[#175b47]">About Give Holidays</Link>
+        <Link href="/help" className="hover:text-[#175b47]">Help Center</Link>
+        <Link href="/legal/privacy" className="hover:text-[#175b47]">Privacy</Link>
+        <Link href="/legal/terms" className="hover:text-[#175b47]">Terms</Link>
+        <Link href="/support" className="hover:text-[#175b47]">Support</Link>
+      </div>
+    </footer>
   </main>;
 }
 
