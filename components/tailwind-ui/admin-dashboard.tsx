@@ -28,7 +28,7 @@ type AdminDashboardProps = {
 // - layout/list-containers/separate_cards.jsx for operational checklists
 export function AdminDashboard({ auction, previousAuctions, nonprofit, payment, connectingPayments, onManageItems, onManagePage, onCreateAuction, onExport, onCloseout, onHomepage, onConnectPayments, onOpenAuction, onViewAuction }: AdminDashboardProps) {
   const checks = [
-    { label: 'Homepage', detail: nonprofit ? 'Edit and publish your public homepage' : 'Create your public page', done: Boolean(nonprofit), action: nonprofit ? onHomepage : onManagePage },
+    { label: 'Auction page', detail: nonprofit ? 'Edit and publish your branded auction page' : 'Create your shareable auction page', done: Boolean(nonprofit), action: nonprofit ? onHomepage : onManagePage },
     { label: 'Auction items', detail: auction.items ? `${auction.items} items listed` : 'Add your first item', done: auction.items > 0, action: onManageItems },
     { label: 'Bidder access', detail: 'Registration is required before bidding', done: true, action: onManagePage },
     { label: 'Payments', detail: payment?.status === 'ready' ? 'Stripe is ready for winning-bid payments' : payment?.status === 'pending' ? 'Finish Stripe verification' : 'Connect the nonprofit’s Stripe account', done: payment?.status === 'ready', action: onConnectPayments },
@@ -37,7 +37,7 @@ export function AdminDashboard({ auction, previousAuctions, nonprofit, payment, 
   return <div className="space-y-8">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><p className="eyebrow text-muted-foreground mb-2">ORGANIZER WORKSPACE</p><h1 className="text-3xl font-semibold tracking-tight">Your auction at a glance</h1><p className="mt-2 text-muted-foreground">Keep {auction.name} moving forward.</p></div>
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button variant="outline" onClick={onHomepage} disabled={!nonprofit}><LayoutTemplate size={16}/>Homepage</Button><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export</Button><Button onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button variant="outline" onClick={onHomepage} disabled={!nonprofit}><LayoutTemplate size={16}/>Auction page</Button><Button variant="outline" onClick={onCloseout}><ClipboardCheck size={16}/>Closeout</Button><Button variant="outline" onClick={onExport}><Download size={16}/>Export</Button><Button onClick={onCreateAuction}><ArrowUpRight size={16}/>New auction</Button></div>
     </div>
 
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border bg-[#e0e7e2] sm:grid-cols-2 xl:grid-cols-4">
@@ -52,7 +52,7 @@ export function AdminDashboard({ auction, previousAuctions, nonprofit, payment, 
         <div className="flex flex-wrap items-start justify-between gap-4"><div><p className="eyebrow text-muted-foreground mb-2">FUNDRAISING PROGRESS</p><h2 className="text-xl font-semibold">You’re building momentum</h2></div><span className="text-lg font-semibold">{auction.progress}%</span></div>
         <Progress value={auction.progress} className="mt-6 h-2 bg-[#e5eee8]" />
         <div className="mt-4 flex justify-between text-sm text-muted-foreground"><span>{auction.total} raised in test commitments</span><span>{auction.goal} target</span></div>
-        <div className="mt-7 flex flex-wrap gap-3"><Button onClick={onManageItems}>Review items <ArrowUpRight size={16}/></Button>{nonprofit && <Button variant="outline" asChild><a href={`/n/${nonprofit.slug}`} target="_blank" rel="noreferrer">View nonprofit page <ExternalLink size={16}/></a></Button>}</div>
+        <div className="mt-7 flex flex-wrap gap-3"><Button onClick={onManageItems}>Review items <ArrowUpRight size={16}/></Button>{nonprofit && <Button variant="outline" asChild><a href={`/n/${nonprofit.slug}`} target="_blank" rel="noreferrer">View live auction page <ExternalLink size={16}/></a></Button>}</div>
       </section>
       <section className="panel"><div className="flex items-center gap-2 mb-5"><Users size={18} className="text-primary"/><h2 className="font-semibold">Launch checklist</h2></div><div className="space-y-4">{checks.map(check=><button key={check.label} onClick={check.action} className="flex w-full items-start gap-3 text-left rounded-lg p-2 -m-2 hover:bg-muted"><span className="mt-0.5">{check.done ? <CheckCircle2 size={18} className="text-[#2f7d5b]"/> : <CircleAlert size={18} className="text-amber-600"/>}</span><span className="min-w-0"><span className="block text-sm font-medium">{check.label}</span><span className="block text-xs text-muted-foreground mt-1">{check.detail}</span></span></button>)}</div></section>
     </div>

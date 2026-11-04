@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createAuction } from '../lib/auction.ts';
 import { defaultHomepage, homepageConfigSchema, homepageReadiness, safeLink } from '../lib/homepage.ts';
 
@@ -30,4 +31,23 @@ test('homepage schema and renderer links reject unsafe destinations', () => {
   assert.equal(homepageConfigSchema.safeParse(config).success, false);
   assert.equal(safeLink('javascript:alert(1)'), '#');
   assert.equal(safeLink('/n/community-fund'), '/n/community-fund');
+});
+
+test('auction page builder clearly separates drafts, publishing, and the live page', () => {
+  const builder = readFileSync(new URL('../app/homepage/homepage-builder.tsx', import.meta.url), 'utf8');
+  const basics = readFileSync(new URL('../app/nonprofit-settings.tsx', import.meta.url), 'utf8');
+  assert.match(builder, /Auction page ·/);
+  assert.match(builder, /Draft preview · links are disabled/);
+  assert.match(builder, /View live page/);
+  assert.match(builder, /queuedAction/);
+  assert.match(basics, /Open page builder/);
+  assert.match(basics, /Your shareable auction-page link/);
+});
+
+test('Gather homepage states the focused auction and risk-free travel position', () => {
+  const landing = readFileSync(new URL('../app/landing-page.tsx', import.meta.url), 'utf8');
+  assert.match(landing, /A simpler auction\. More for your mission\./);
+  assert.match(landing, /Everything a silent auction needs\. Nothing it doesn’t\./);
+  assert.match(landing, /fulfillment obligation only after the winning bidder pays/);
+  assert.doesNotMatch(landing, /destination placeholders/);
 });
