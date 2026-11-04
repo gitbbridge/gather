@@ -5,10 +5,14 @@ import {
   Compass,
   CreditCard,
   Gavel,
+  LayoutTemplate,
   Leaf,
   MapPin,
   Plane,
+  ShieldCheck,
+  Smartphone,
   Sparkles,
+  WalletCards,
 } from 'lucide-react';
 
 const steps = [
@@ -32,6 +36,7 @@ export function LandingPage() {
           </a>
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#536b60] md:flex" aria-label="Main navigation">
             <a className="hover:text-[#175b47]" href="#how-it-works">How it works</a>
+            <a className="hover:text-[#175b47]" href="#built-for-auctions">Why Gather</a>
             <a className="hover:text-[#175b47]" href="#travel">Travel packages</a>
             <a className="hover:text-[#175b47]" href="#pricing">Pricing</a>
           </nav>
@@ -51,13 +56,13 @@ export function LandingPage() {
         <div className="relative mx-auto grid max-w-7xl gap-14 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-10 lg:py-28">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#cdded3] bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#175b47]">
-              <Sparkles size={14} /> Auctions built for good
+              <Sparkles size={14} /> Online auctions built for good
             </p>
             <h1 className="mt-7 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-[#18392d] sm:text-6xl lg:text-7xl">
-              Turn great items into more support for your mission.
+              A simpler auction. More for your mission.
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#5d7067] sm:text-xl">
-              Gather gives nonprofit teams one calm, guided place to build an auction, invite supporters, and manage every winning bid.
+              Run a polished online silent auction with mobile bidding, clear winner checkout, and risk-free travel experiences—without event-night complexity.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a href="/onboarding" className="inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#104735]">
@@ -68,9 +73,9 @@ export function LandingPage() {
               </a>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#52695e]">
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Five guided steps</span>
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Autosaved drafts</span>
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Shareable nonprofit page</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Five guided setup steps</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Mobile bidding</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Risk-free travel packages</span>
             </div>
           </div>
 
@@ -132,6 +137,21 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="built-for-auctions" className="scroll-mt-24 bg-[#f8faf8] py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Built for the auction you are running now</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Everything a silent auction needs. Nothing it doesn’t.</h2></div>
+            <p className="max-w-2xl text-lg leading-8 text-[#617269] lg:justify-self-end">Gather stays focused on online and mobile silent auctions: a strong nonprofit page, confident bidding, straightforward checkout, and a clean path from winner to fulfillment.</p>
+          </div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <FeaturePoint icon={<LayoutTemplate/>} title="A page that feels like your nonprofit" copy="Share one branded link with your logo, story, colors, auctions, and featured items." />
+            <FeaturePoint icon={<Smartphone/>} title="Mobile bidding that stays simple" copy="Supporters browse freely, register to bid, set a maximum, and follow the items they care about." />
+            <FeaturePoint icon={<WalletCards/>} title="One clear winner checkout" copy="Winning items roll into one invoice with the 5% allocation and processing fees shown separately." />
+            <FeaturePoint icon={<ShieldCheck/>} title="Travel without upfront risk" copy="Give Holidays packages become a fulfillment obligation only after the winning bidder pays." />
+          </div>
+        </div>
+      </section>
+
       <section id="travel" className="scroll-mt-24 border-y border-[#dfe7e1] bg-[#edf4ef] py-20 sm:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:items-center lg:px-10">
           <div className="relative min-h-[470px]">
@@ -140,7 +160,7 @@ export function LandingPage() {
             </div>
             <div className="absolute bottom-0 right-0 w-[64%] rounded-[1.7rem] border border-[#d8e2db] bg-white p-5 shadow-2xl sm:p-6">
               <div className="flex items-center justify-between"><span className="grid size-11 place-items-center rounded-full bg-[#e7f1eb] text-[#175b47]"><Plane size={20} /></span><span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#7b8c84]">Give Holidays</span></div>
-              <p className="mt-5 text-xl font-semibold tracking-tight">Add travel without starting from scratch.</p>
+              <p className="mt-5 text-xl font-semibold tracking-tight">Curated travel. No upfront package purchase.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {destinations.slice(0, 4).map(destination => <span key={destination} className="rounded-full bg-[#f0f5f2] px-3 py-1.5 text-xs text-[#476157]">{destination}</span>)}
               </div>
@@ -149,7 +169,7 @@ export function LandingPage() {
           <div className="lg:pl-8">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]"><Compass size={16} /> Travel-ready auctions</p>
             <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Bring your own items—or open up the map.</h2>
-            <p className="mt-6 text-lg leading-8 text-[#5e7167]">Choose from Give Holidays destination placeholders during setup, then confirm package pricing, availability, inclusions, and restrictions before publishing.</p>
+            <p className="mt-6 text-lg leading-8 text-[#5e7167]">Add curated Give Holidays experiences beside donated items. Package inclusions, restrictions, value, and redemption terms stay clear—and fulfillment begins only after the winner pays.</p>
             <div className="mt-8 grid grid-cols-2 gap-3">
               {destinations.map(destination => (
                 <div key={destination} className="flex items-center gap-2 rounded-xl border border-[#d6e2da] bg-white/70 px-3 py-3 text-sm font-medium"><MapPin size={15} className="text-[#397a60]" />{destination}</div>
@@ -178,7 +198,7 @@ export function LandingPage() {
 
       <section className="px-5 pb-20 sm:px-8 sm:pb-28 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 overflow-hidden rounded-[2rem] bg-[#e5efe9] p-8 sm:p-12 lg:flex-row lg:items-center">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Ready when you are</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Give your next fundraiser a better place to begin.</h2></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Ready when you are</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Launch a clear, modern auction your supporters can use anywhere.</h2></div>
           <a href="/onboarding" className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white hover:bg-[#104735]">Start an auction <ArrowRight size={18} /></a>
         </div>
       </section>
@@ -200,4 +220,8 @@ function PreviewStat({ label, value }: { label: string; value: string }) {
 
 function FeePoint({ icon, title, copy }: { icon: React.ReactNode; title: string; copy: string }) {
   return <article><span className="grid size-11 place-items-center rounded-full bg-[#e5efe9] text-[#175b47]">{icon}</span><h3 className="mt-5 font-semibold text-[#1d4234]">{title}</h3><p className="mt-2 text-sm leading-6 text-[#617269]">{copy}</p></article>;
+}
+
+function FeaturePoint({ icon, title, copy }: { icon: React.ReactNode; title: string; copy: string }) {
+  return <article className="rounded-2xl border border-[#dce5df] bg-white p-6"><span className="grid size-11 place-items-center rounded-full bg-[#e5efe9] text-[#175b47]">{icon}</span><h3 className="mt-6 text-lg font-semibold text-[#1d4234]">{title}</h3><p className="mt-3 text-sm leading-6 text-[#617269]">{copy}</p></article>;
 }
