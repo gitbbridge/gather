@@ -16,11 +16,11 @@ import {
 } from 'lucide-react';
 
 const steps = [
-  ['01', 'Organization', 'Start with the essential nonprofit details.'],
-  ['02', 'Auction details', 'Name the event and choose its shareable link.'],
-  ['03', 'Add items', 'Bring your own items or select travel packages.'],
-  ['04', 'Payment & fees', 'Choose who covers the platform commission.'],
-  ['05', 'Review & launch', 'Check the essentials and open your auction.'],
+  ['01', 'Organization', 'Add your nonprofit details and mission.'],
+  ['02', 'Auction details', 'Set the name, dates, and shareable page link.'],
+  ['03', 'Add items', 'List donated items or add Give Holidays experiences.'],
+  ['04', 'Payment & fees', 'Connect Stripe and choose how the 5% fee is allocated.'],
+  ['05', 'Review & launch', 'Preview the bidder experience, then publish.'],
 ];
 
 const destinations = ['Cabo San Lucas', 'Costa Rica', 'Tuscany', 'Paris', 'Maui', 'New York City'];
@@ -36,8 +36,8 @@ export function LandingPage() {
           </a>
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#536b60] md:flex" aria-label="Main navigation">
             <a className="hover:text-[#175b47]" href="#how-it-works">How it works</a>
-            <a className="hover:text-[#175b47]" href="#built-for-auctions">Why Gather</a>
-            <a className="hover:text-[#175b47]" href="#travel">Travel packages</a>
+            <a className="hover:text-[#175b47]" href="#built-for-auctions">Features</a>
+            <a className="hover:text-[#175b47]" href="#travel">Travel experiences</a>
             <a className="hover:text-[#175b47]" href="#pricing">Pricing</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -56,26 +56,26 @@ export function LandingPage() {
         <div className="relative mx-auto grid max-w-7xl gap-14 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-10 lg:py-28">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#cdded3] bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#175b47]">
-              <Sparkles size={14} /> Online auctions built for good
+              <Sparkles size={14} /> Online silent auctions for nonprofits
             </p>
             <h1 className="mt-7 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-[#18392d] sm:text-6xl lg:text-7xl">
-              A simpler auction. More for your mission.
+              Raise more with an auction that’s easier to run.
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-[#5d7067] sm:text-xl">
-              Run a polished online silent auction with mobile bidding, clear winner checkout, and risk-free travel experiences—without event-night complexity.
+              Gather brings your branded auction page, mobile bidding, winner checkout, and risk-free Give Holidays travel experiences together in one focused platform.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a href="/onboarding" className="inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#104735]">
-                Start your auction <ArrowRight size={18} />
+                Build your auction <ArrowRight size={18} />
               </a>
               <a href="/demo" className="inline-flex min-h-13 items-center justify-center gap-2 rounded-full border border-[#cbd9d0] bg-white px-6 font-semibold text-[#254b3d] hover:bg-[#f1f6f3]">
-                Explore a sample auction
+                See a sample auction
               </a>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-[#52695e]">
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Five guided setup steps</span>
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Mobile bidding</span>
-              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Risk-free travel packages</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> Guided setup with autosaved drafts</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> One shareable auction page</span>
+              <span className="flex items-center gap-2"><Check className="text-[#2f765b]" size={16} /> No upfront travel package cost</span>
             </div>
           </div>
 
@@ -121,9 +121,9 @@ export function LandingPage() {
       <section id="how-it-works" className="scroll-mt-24 bg-white py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">A clear path to launch</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Five focused steps. No setup maze.</h2>
-            <p className="mt-5 text-lg leading-8 text-[#617269]">One primary action at a time keeps your team moving. Drafts save as you go, so the work is ready when you are.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">From idea to live auction</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Launch in five focused steps.</h2>
+            <p className="mt-5 text-lg leading-8 text-[#617269]">Gather guides your team through the essentials one decision at a time. Every draft saves automatically, so you can stop and return without losing your work.</p>
           </div>
           <div className="mt-12 grid gap-3 md:grid-cols-5">
             {steps.map(([number, title, copy]) => (
@@ -140,14 +140,14 @@ export function LandingPage() {
       <section id="built-for-auctions" className="scroll-mt-24 bg-[#f8faf8] py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Built for the auction you are running now</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Everything a silent auction needs. Nothing it doesn’t.</h2></div>
-            <p className="max-w-2xl text-lg leading-8 text-[#617269] lg:justify-self-end">Gather stays focused on online and mobile silent auctions: a strong nonprofit page, confident bidding, straightforward checkout, and a clean path from winner to fulfillment.</p>
+            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Built around the work that matters</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">A calm workspace for organizers. A clear experience for bidders.</h2></div>
+            <p className="max-w-2xl text-lg leading-8 text-[#617269] lg:justify-self-end">Gather is purpose-built for online and mobile silent auctions—without ticketing, seating charts, check-in tools, or other event-night complexity getting in the way.</p>
           </div>
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <FeaturePoint icon={<LayoutTemplate/>} title="A page that feels like your nonprofit" copy="Share one branded link with your logo, story, colors, auctions, and featured items." />
-            <FeaturePoint icon={<Smartphone/>} title="Mobile bidding that stays simple" copy="Supporters browse freely, register to bid, set a maximum, and follow the items they care about." />
-            <FeaturePoint icon={<WalletCards/>} title="One clear winner checkout" copy="Winning items roll into one invoice with the 5% allocation and processing fees shown separately." />
-            <FeaturePoint icon={<ShieldCheck/>} title="Travel without upfront risk" copy="Give Holidays packages become a fulfillment obligation only after the winning bidder pays." />
+            <FeaturePoint icon={<LayoutTemplate/>} title="Your nonprofit, front and center" copy="Create one branded home for your mission, auction details, featured items, sponsors, and every auction you run." />
+            <FeaturePoint icon={<Smartphone/>} title="Bidding built for any screen" copy="Supporters can browse before registering, place bids from their phones, set a maximum bid, and save items to a watchlist." />
+            <FeaturePoint icon={<WalletCards/>} title="A cleaner path from win to paid" copy="Combine a winner’s items into one invoice and show the platform commission and payment-processing fees separately." />
+            <FeaturePoint icon={<ShieldCheck/>} title="Travel without upfront inventory" copy="Give Holidays packages create a fulfillment obligation only after the auction closes and the winning bidder pays." />
           </div>
         </div>
       </section>
@@ -160,21 +160,22 @@ export function LandingPage() {
             </div>
             <div className="absolute bottom-0 right-0 w-[64%] rounded-[1.7rem] border border-[#d8e2db] bg-white p-5 shadow-2xl sm:p-6">
               <div className="flex items-center justify-between"><span className="grid size-11 place-items-center rounded-full bg-[#e7f1eb] text-[#175b47]"><Plane size={20} /></span><span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#7b8c84]">Give Holidays</span></div>
-              <p className="mt-5 text-xl font-semibold tracking-tight">Curated travel. No upfront package purchase.</p>
+              <p className="mt-5 text-xl font-semibold tracking-tight">Curated experiences. No upfront package purchase.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {destinations.slice(0, 4).map(destination => <span key={destination} className="rounded-full bg-[#f0f5f2] px-3 py-1.5 text-xs text-[#476157]">{destination}</span>)}
               </div>
             </div>
           </div>
           <div className="lg:pl-8">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]"><Compass size={16} /> Travel-ready auctions</p>
-            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Bring your own items—or open up the map.</h2>
-            <p className="mt-6 text-lg leading-8 text-[#5e7167]">Add curated Give Holidays experiences beside donated items. Package inclusions, restrictions, value, and redemption terms stay clear—and fulfillment begins only after the winner pays.</p>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]"><Compass size={16} /> The Give Holidays difference</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-[#18392d] sm:text-5xl">Turn dream trips into auction items—without buying them first.</h2>
+            <p className="mt-6 text-lg leading-8 text-[#5e7167]">Add curated Give Holidays experiences beside donated items. Bidders see the value, inclusions, restrictions, expiration, and redemption terms before they bid. If a package does not sell—or the winner does not pay—the nonprofit does not owe the travel cost.</p>
             <div className="mt-8 grid grid-cols-2 gap-3">
               {destinations.map(destination => (
                 <div key={destination} className="flex items-center gap-2 rounded-xl border border-[#d6e2da] bg-white/70 px-3 py-3 text-sm font-medium"><MapPin size={15} className="text-[#397a60]" />{destination}</div>
               ))}
             </div>
+            <p className="mt-4 text-xs leading-5 text-[#6d7f76]">Representative destinations shown. Package availability, pricing, and travel terms vary by experience.</p>
           </div>
         </div>
       </section>
@@ -183,14 +184,14 @@ export function LandingPage() {
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
           <div className="grid overflow-hidden rounded-[2rem] border border-[#dce5df] lg:grid-cols-[0.9fr_1.1fr]">
             <div className="bg-[#174c3b] p-8 text-white sm:p-12">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#bdd5c7]">Straightforward pricing</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#bdd5c7]">One transparent platform fee</p>
               <p className="mt-6 text-7xl font-semibold tracking-[-0.07em]">5%</p>
               <p className="mt-3 text-lg text-[#d8e7de]">platform commission on eligible auction transactions</p>
             </div>
             <div className="grid gap-7 bg-[#fbfcfb] p-8 sm:grid-cols-3 sm:p-12">
-              <FeePoint icon={<BadgeDollarSign />} title="Choose the allocation" copy="The organization can cover it, pass it to the winning bidder, or split it by percentage." />
-              <FeePoint icon={<CreditCard />} title="Processing stays separate" copy="Payment-processing fees are disclosed separately from Gather’s platform commission." />
-              <FeePoint icon={<Plane />} title="Travel is transparent" copy="Give Holidays package markup is included in package pricing and identified separately." />
+              <FeePoint icon={<BadgeDollarSign />} title="You choose who covers it" copy="The nonprofit can cover the 5%, pass it to winning bidders, or split it by a percentage you set." />
+              <FeePoint icon={<CreditCard />} title="Processing fees stay separate" copy="Payment-processing fees are disclosed as their own line instead of being hidden inside Gather’s commission." />
+              <FeePoint icon={<Plane />} title="Travel pricing stays clear" copy="Any Give Holidays markup is included in the package price and identified separately from the platform commission." />
             </div>
           </div>
         </div>
@@ -198,15 +199,15 @@ export function LandingPage() {
 
       <section className="px-5 pb-20 sm:px-8 sm:pb-28 lg:px-10">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 overflow-hidden rounded-[2rem] bg-[#e5efe9] p-8 sm:p-12 lg:flex-row lg:items-center">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Ready when you are</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Launch a clear, modern auction your supporters can use anywhere.</h2></div>
-          <a href="/onboarding" className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white hover:bg-[#104735]">Start an auction <ArrowRight size={18} /></a>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f765b]">Ready when you are</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Your next auction can be simpler.</h2><p className="mt-3 max-w-2xl leading-7 text-[#5f7168]">Create the draft, add your first items, and share it only when everything feels ready.</p></div>
+          <a href="/onboarding" className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white hover:bg-[#104735]">Build your auction <ArrowRight size={18} /></a>
         </div>
       </section>
 
       <footer className="border-t border-[#dfe7e1] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-[#687a71] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <a href="/" className="flex items-center gap-2 font-semibold text-[#175b47]"><Leaf size={17} />gather.</a>
-          <p>Purpose-built auctions for nonprofit teams.</p>
+          <p>Simple online auctions and risk-free travel experiences for nonprofits.</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2"><a href="/help" className="hover:text-[#175b47]">Help</a><a href="/legal/privacy" className="hover:text-[#175b47]">Privacy</a><a href="/legal/terms" className="hover:text-[#175b47]">Terms</a><a href="/support" className="hover:text-[#175b47]">Support</a><a href="/auth?return_to=%2Fadmin" className="hover:text-[#175b47]">Log in</a><a href="/onboarding" className="hover:text-[#175b47]">Start an auction</a></div>
         </div>
       </footer>
