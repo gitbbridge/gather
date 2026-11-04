@@ -46,8 +46,10 @@ test('auction page builder clearly separates drafts, publishing, and the live pa
 
 test('Gather homepage states the focused auction and risk-free travel position', () => {
   const landing = readFileSync(new URL('../app/landing-page.tsx', import.meta.url), 'utf8');
-  assert.match(landing, /A simpler auction\. More for your mission\./);
-  assert.match(landing, /Everything a silent auction needs\. Nothing it doesn’t\./);
-  assert.match(landing, /fulfillment obligation only after the winning bidder pays/);
+  assert.match(landing, /Raise more with an auction that’s easier to run\./);
+  assert.match(landing, /A calm workspace for organizers\. A clear experience for bidders\./);
+  assert.match(landing, /fulfillment obligation only after the auction closes and the winning bidder pays/);
+  assert.match(landing, /the nonprofit does not owe the travel cost/);
+  assert.match(landing, /Payment-processing fees are disclosed as their own line/);
   assert.doesNotMatch(landing, /destination placeholders/);
 });
