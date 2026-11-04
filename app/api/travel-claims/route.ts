@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {getAppUser} from '@/lib/auth';
 import {createSupabaseAdminClient} from '@/lib/supabase/admin';
+import {safelySendTrackedTemplateEmail} from '@/lib/email/notifications';
 
 export const dynamic='force-dynamic';
 const input=z.object({fulfillmentId:z.string().uuid(),travelerNames:z.array(z.string().trim().min(2).max(100)).min(1).max(12),preferredDates:z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).min(1).max(6),contactPhone:z.string().trim().max(40).optional(),notes:z.string().trim().max(2000).optional()});
@@ -12,7 +13,7 @@ export async function POST(request:Request){
   const user=await getAppUser();if(!user)return json({error:'Sign in to claim your experience.'},401);
   const parsed=input.safeParse(await request.json());if(!parsed.success)return json({error:'Add traveler names and at least one preferred date.'},400);
   const client=createSupabaseAdminClient();
-  const {data:fulfillment,error}=await client.from('fulfillments').select('id,status,fulfillment_type,winner_invoice_items(invoice_id,winner_invoices(payer_id,status))').eq('id',parsed.data.fulfillmentId).single();
+  const {data:fulfillment,error}=await client.from('fulfillments').select('id,status,fulfillment_type,winner_invoice_items(invoice_id,auction_items(title),winner_invoices(payer_id,status,auction_id))').eq('id',parsed.data.fulfillmentId).single();
   if(error||!fulfillment)return json({error:'Travel fulfillment not found.'},404);
   const line=Array.isArray(fulfillment.winner_invoice_items)?fulfillment.winner_invoice_items[0]:fulfillment.winner_invoice_items;
   const invoice=Array.isArray(line?.winner_invoices)?line.winner_invoices[0]:line?.winner_invoices;
@@ -22,6 +23,8 @@ export async function POST(request:Request){
   const claim={fulfillment_id:fulfillment.id,winner_id:user.userId,traveler_details:{names:parsed.data.travelerNames,contactEmail:user.email,contactPhone:parsed.data.contactPhone||'',notes:parsed.data.notes||''},preferred_dates:parsed.data.preferredDates,submitted_at:new Date().toISOString()};
   const {error:claimError}=await client.from('traveler_claims').upsert(claim,{onConflict:'fulfillment_id'});if(claimError)throw claimError;
   const {error:statusError}=await client.from('fulfillments').update({status:'traveler_details_submitted'}).eq('id',fulfillment.id);if(statusError)throw statusError;
+  const auctionItem=Array.isArray(line?.auction_items)?line.auction_items[0]:line?.auction_items;
+  await safelySendTrackedTemplateEmail({userId:user.userId,recipientEmail:user.email,auctionId:invoice?.auction_id||null,templateId:'travel-details-received',dedupeKey:`travel-details-received-${fulfillment.id}-${claim.submitted_at}`,values:{packageTitle:auctionItem?.title||'Give Holidays experience',travelerNames:parsed.data.travelerNames.join(', '),preferredDates:parsed.data.preferredDates.join(', '),myWinsUrl:`${(process.env.APP_URL||'https://gatherforgood.bid').replace(/\/$/,'')}/my-wins`}});
   return json({ok:true,status:'traveler_details_submitted'});
  }catch(error){console.error('Unable to submit travel claim:',error);return json({error:'Unable to submit traveler details. Please try again.'},500);}
 }

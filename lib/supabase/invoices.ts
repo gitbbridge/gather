@@ -1,6 +1,7 @@
 import type { Auction } from '@/lib/auction';
 import { buildWinnerInvoiceDrafts } from '@/lib/invoices';
 import { createSupabaseAdminClient } from './admin';
+import { dateTime, money, safelySendTrackedTemplateEmail } from '@/lib/email/notifications';
 
 export async function generateWinnerInvoices(auctionId: string, auction: Auction) {
   const client = createSupabaseAdminClient();
@@ -26,6 +27,7 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
       totalDueCents += draft.totalDueCents;
       continue;
     }
+    const dueAt = new Date(Date.now() + 7 * 86_400_000).toISOString();
     const invoiceRecord = {
       auction_id: auctionId,
       payer_id: draft.payerId,
@@ -36,7 +38,7 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
       give_holidays_wholesale_cost_cents: draft.giveHolidaysWholesaleCostCents,
       give_holidays_markup_cents: draft.giveHolidaysMarkupCents,
       total_due_cents: draft.totalDueCents,
-      due_at: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+      due_at: dueAt,
     };
     const invoiceQuery = existing
       ? client.from('winner_invoices').update(invoiceRecord).eq('id', existing.id)
@@ -56,6 +58,27 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
     const { error: lineError } = await client.from('winner_invoice_items')
       .upsert(lineRecords, { onConflict: 'auction_item_id' });
     if (lineError) throw lineError;
+    const itemSummary = draft.lines.map(line => {
+      const item = auction.items.find(candidate => candidate.id === line.itemId);
+      return `${item?.title || 'Auction item'} · ${money(line.hammerPriceCents)}`;
+    }).join(', ');
+    const origin = (process.env.APP_URL || 'https://gatherforgood.bid').replace(/\/$/, '');
+    await Promise.allSettled([
+      safelySendTrackedTemplateEmail({
+        userId: draft.payerId,
+        auctionId,
+        templateId: 'winner',
+        dedupeKey: `winner-${invoice.id}`,
+        values: { auctionName: auction.name, organizationName: auction.organization, itemSummary, myWinsUrl: `${origin}/my-wins` },
+      }),
+      safelySendTrackedTemplateEmail({
+        userId: draft.payerId,
+        auctionId,
+        templateId: 'invoice-ready',
+        dedupeKey: `invoice-ready-${invoice.id}`,
+        values: { auctionName: auction.name, hammerSubtotal: money(draft.hammerSubtotalCents), bidderFee: money(draft.bidderPlatformFeeCents), totalDue: money(draft.totalDueCents), dueDate: dateTime(dueAt), checkoutUrl: `${origin}/my-wins` },
+      }),
+    ]);
     // A winning bid is not a travel obligation. Stripe's paid webhook creates
     // fulfillment records after the combined invoice is actually paid.
     totalDueCents += draft.totalDueCents;
