@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleHelp, Leaf, MapPin, Plane, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { GatherAssistant } from '@/components/gather-assistant';
 
 const steps = ['Organization', 'Auction Details', 'Add Items', 'Payment & Fees', 'Review & Launch'];
 const storageKey = 'gather-onboarding-draft-v1';
@@ -93,6 +94,7 @@ export default function OnboardingClient() {
         {step === 2 && <Items items={draft.items} addItem={addItem} editItem={editItem} removeItem={removeItem} toggleTravelPackage={toggleTravelPackage}/>}
         {step === 3 && <Payment draft={draft} update={update} organizationShare={organizationShare} bidderShare={bidderShare}/>}
         {step === 4 && <Review draft={draft} organizationShare={organizationShare} bidderShare={bidderShare}/>}
+        <GatherAssistant audience="organizer" surface="onboarding" onboardingStep={step} welcome={step === 0}/>
         {error && <p role="alert" className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
         <footer className="mt-9 flex items-center justify-between gap-4 border-t pt-6"><div>{step > 0 && <Button type="button" variant="ghost" onClick={() => { setError(''); setStep(current => current - 1); }}><ArrowLeft size={16}/>Back</Button>}</div>{step < 4 ? <Button type="button" className="h-11 px-5" onClick={next}>Continue <ArrowRight size={16}/></Button> : <Button type="button" className="h-11 px-5" disabled={busy} onClick={launch}>{busy ? 'Launching…' : 'Launch fundraiser'} <ArrowRight size={16}/></Button>}</footer>
       </>}
