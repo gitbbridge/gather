@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_FROM_EMAIL, sendEmail } from '../lib/email/resend.ts';
+import { dateTime, deliveryTemplateKey, money } from '../lib/email/notification-values.ts';
+
+test('notification helpers create stable delivery keys and customer-facing values', () => {
+  assert.equal(deliveryTemplateKey('outbid', 'auction-1-bid-2'), 'outbid::auction-1-bid-2');
+  assert.equal(money(369000), '$3,690.00');
+  assert.match(dateTime('2026-11-04T00:00:00.000Z'), /Nov 3, 2026/);
+});
 
 test('Resend delivery uses the Gather no-reply sender and protects the API key', async () => {
   const originalFetch = globalThis.fetch;
