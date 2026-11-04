@@ -2,6 +2,7 @@ import { renderEmailTemplate } from './templates.ts';
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 export const DEFAULT_FROM_EMAIL = 'Gather for Good <noreply@gatherforgood.bid>';
+export const DEFAULT_BCC_EMAIL = 'admin@gatherforgood.bid';
 
 type SendEmailInput = {
   to: string | string[];
@@ -32,6 +33,12 @@ function recipients(value: string | string[]) {
 }
 
 export async function sendEmail(input: SendEmailInput) {
+  const to = recipients(input.to);
+  const configuredBcc = process.env.RESEND_BCC_EMAIL?.trim() || DEFAULT_BCC_EMAIL;
+  const bcc = recipients(configuredBcc).filter(
+    address => !to.some(primary => primary.toLowerCase() === address.toLowerCase()),
+  );
+
   const response = await fetch(RESEND_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -41,7 +48,8 @@ export async function sendEmail(input: SendEmailInput) {
     },
     body: JSON.stringify({
       from: process.env.RESEND_FROM_EMAIL?.trim() || DEFAULT_FROM_EMAIL,
-      to: recipients(input.to),
+      to,
+      ...(bcc.length ? { bcc } : {}),
       subject: input.subject.replace(/[\r\n]+/g, ' ').trim(),
       html: input.html,
       ...(input.replyTo ? { reply_to: input.replyTo } : {}),
