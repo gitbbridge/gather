@@ -1,2 +1,7 @@
 import AuctionApp from './auction-app';
-export default function Home(){return <AuctionApp/>;}
+import { LandingPage } from './landing-page';
+
+export default async function Home({ searchParams }: { searchParams: Promise<{ auction?: string }> }) {
+  const { auction } = await searchParams;
+  return auction ? <AuctionApp /> : <LandingPage />;
+}

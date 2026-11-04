@@ -1,3 +1,43 @@
+Gather — nonprofit silent auction app
+Working private test application built with React, TypeScript, Tailwind CSS 4, accessible Radix/Shadcn controls, Vinext, and Cloudflare D1.
+
+Current status
+This is a functional test foundation, not approved for real-money production auctions. Every bid, donation, and buy-now reservation is labeled as test activity. Payments are intentionally not collected. Site access is owner-private.
+
+Approved product and revenue direction
+Gather charges a 5% platform commission on eligible auction transactions. Organizers can cover it, pass it to winning bidders, or split it with a configurable allocation.
+Payment processing fees are separate from the platform commission and must be disclosed separately to the responsible payer.
+Give Holidays travel packages carry a separate package markup included in their displayed package pricing.
+Organizer onboarding follows five autosaved steps: Organization → Auction Details → Add Items → Payment & Fees → Review & Launch. Each step keeps one primary action and the existing Gather visual direction.
+Implemented
+Responsive bidder and organizer shell; searchable catalog, categories, sorting, item details and donor credits.
+ChatGPT sign-in, server authorization for organizer operations, multiple organizer-owned auctions.
+Durable auction state, watchlists, private maximum bidding, minimum increments, earlier-bid tie handling, two-minute anti-sniping extensions.
+Atomic compare-and-swap updates and request-key deduplication at the API boundary.
+In-app outbid notifications with 15-second refresh.
+Test donations and buy-now reservations, goal totals, item creation, pause/resume, naming, and CSV item reports.
+Tenant-scoped Homepage Builder with structured responsive sections, live device previews, autosaved drafts, undo/redo, publish validation, and explicit draft-to-published promotion.
+Organizer Closeout workflow with participant rollups, operational statuses, follow-up drafts, and a master CSV export.
+Seven bidding-engine unit tests, type checking, production Worker build, and local workflow checks.
+Run
+Node.js 22.13+ required. npm install, npm run db:generate when changing the schema, npm run build, then apply local migrations as documented in README.md. npm run dev starts the app. node --experimental-strip-types --test tests/auction.test.mts runs the bidding tests; npx tsc --noEmit checks types.
+
+Required before public launch
+Confirm one nonprofit versus a multi-tenant SaaS business, country/currency, nonprofit onboarding, branding and auction rules.
+Integrate public bidder identity and account recovery using a supported public auth provider. Current sign-in uses the Sites ChatGPT identity path. Add tenant memberships and organizer role management.
+Connect a payment provider (e.g. Stripe Connect for multi-nonprofit payouts), hosted checkout, verified webhook signatures, idempotent settlement, refunds, receipts, payout reconciliation and failed-payment handling. Never store card details in this app.
+Replace the bounded JSON auction aggregate with normalized event/item/bid/order tables and transaction-safe per-item serialization for expected scale. Current aggregate caps each auction at 200 items, 10,000 write requests and 900 KB; it is suitable for a test foundation, not large production events.
+Add durable job scheduling for finalization, winner notification, payment collection, inventory fulfillment and event status transitions. No automatic winner settlement currently runs.
+Connect email/SMS providers with consent, deliverability, unsubscribe controls and a transactional outbox. Current notifications exist only inside the app.
+Add donor intake, image upload/moderation, item editing, configurable schedules, reserve prices, shipping/pickup, event tickets, sponsor branding and tax-receipt rules as required by the actual nonprofit.
+Add production rate limiting, audit logging, monitoring/alerts, backups and restore drills, privacy/retention controls, accessibility audit, abuse handling, security review and multi-user concurrency/load testing.
+Validate end-to-end payment and dispute flows in sandbox, then complete nonprofit approval and a controlled live launch.
+Data and security notes
+The API uses integer cents, prepared SQL, same-origin mutation checks, trusted platform identity, explicit ownership checks for organizer actions and a version predicate for atomic aggregate updates. Maximum bids and bidder IDs are removed from the public response. Amounts displayed as commitments include uncollected bids and test donations, never actual revenue. Production should deduplicate retries using stable client operation keys across network failures; this preview generates a key per submission. Sample auction deadlines are generated for preview; created auction deadlines persist.
+
+Photos are illustrative Unsplash images by Ali Kazal, Elevate, Greg Rosenke, and Clay Banks. Source links are available in the app’s About dialog. Sample nonprofits and donors are fictional.
+
+
 # vinext-starter
 
 A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
@@ -115,6 +155,30 @@ Replace the filename with the pending migration and `DB` with your D1 binding na
 - `npm run build`: build the deployable Sites artifact
 - `npm run start`: preview the built Worker locally with D1/R2 support
 - `npm run db:generate`: generate Drizzle migrations after schema changes
+
+## Supabase authentication and schema
+
+Gather can use Supabase Auth while the existing D1 data layer is migrated in stages.
+
+1. Copy `.env.example` to `.env.local` and add the project's publishable key.
+2. Apply `supabase/migrations/202611030001_initial_auth_and_auction_schema.sql` in the Supabase SQL editor, or link the project and run `supabase db push`.
+   Then apply `supabase/migrations/202611030002_mvp_operations_and_fulfillment.sql` for platform-admin roles, the Give Holidays catalog, auction terms, watchlists, winner invoices, refunds, Stripe event processing, and fulfillment tracking.
+   Apply `supabase/migrations/202611030003_travel_settlement_accounting.sql` afterward so Give Holidays cost and markup are withheld internally instead of being added to the bidder's checkout total.
+3. Add `http://localhost:5173/auth/callback` as an allowed Auth redirect URL for local email confirmation.
+   Password recovery uses the same callback and then continues to `/auth/update-password`. Add the production callback URL after the public domain is connected.
+4. Restart the development server after changing environment variables.
+
+The migration enables Row Level Security, creates auth-linked profiles, nonprofit organizations and memberships, normalized auctions and items, bidder registrations and bids, and transaction fields that keep the 5% platform commission, payment-processing fees, and Give Holidays markup separately auditable. Full EIN values are intentionally not stored; the payment provider should collect them.
+
+## Stripe webhook development
+
+Add the test-mode Stripe keys and the CLI listener's signing secret to `.env.local`, then restart the development server. Forward only the events Gather is preparing to handle:
+
+```sh
+stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,payment_intent.succeeded,payment_intent.payment_failed,charge.refunded --forward-to http://localhost:5173/api/stripe/webhook
+```
+
+The signing secret printed by that command belongs in `STRIPE_WEBHOOK_SECRET`. The webhook verifies the unmodified request body and `Stripe-Signature`, stores only minimal event metadata, and ignores replayed event IDs. It currently accepts events for later processing; payment settlement and fulfillment must not be enabled until event-specific handlers are implemented and tested.
 
 When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 
