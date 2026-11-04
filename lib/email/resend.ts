@@ -34,10 +34,12 @@ function recipients(value: string | string[]) {
 
 export async function sendEmail(input: SendEmailInput) {
   const to = recipients(input.to);
-  const configuredBcc = process.env.RESEND_BCC_EMAIL?.trim() || DEFAULT_BCC_EMAIL;
-  const bcc = recipients(configuredBcc).filter(
-    address => !to.some(primary => primary.toLowerCase() === address.toLowerCase()),
-  );
+  const configuredBcc = process.env.RESEND_BCC_EMAIL?.trim();
+  const bcc = configuredBcc
+    ? recipients(configuredBcc).filter(
+        address => !to.some(primary => primary.toLowerCase() === address.toLowerCase()),
+      )
+    : [];
 
   const response = await fetch(RESEND_ENDPOINT, {
     method: 'POST',
