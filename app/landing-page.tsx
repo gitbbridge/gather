@@ -184,10 +184,10 @@ export function LandingPage() {
       </section>
 
       <footer className="border-t border-[#dfe7e1] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-[#687a71] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-[#687a71] sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-8 lg:px-10">
           <a href="/" className="flex items-center gap-2 font-semibold text-[#175b47]"><Leaf size={17} />gather.</a>
           <p>Purpose-built auctions for nonprofit teams.</p>
-          <div className="flex gap-5"><a href="/auth?return_to=%2Fadmin" className="hover:text-[#175b47]">Log in</a><a href="/onboarding" className="hover:text-[#175b47]">Start an auction</a></div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2"><a href="/help" className="hover:text-[#175b47]">Help</a><a href="/legal/privacy" className="hover:text-[#175b47]">Privacy</a><a href="/legal/terms" className="hover:text-[#175b47]">Terms</a><a href="/support" className="hover:text-[#175b47]">Support</a><a href="/auth?return_to=%2Fadmin" className="hover:text-[#175b47]">Log in</a><a href="/onboarding" className="hover:text-[#175b47]">Start an auction</a></div>
         </div>
       </footer>
     </main>

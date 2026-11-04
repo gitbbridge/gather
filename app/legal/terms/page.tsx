@@ -1,0 +1,16 @@
+import { DraftPolicyPage } from '@/components/draft-policy-page';
+
+export const metadata = { title: 'Terms of Service | Gather' };
+export default function TermsPage() { return <DraftPolicyPage active="/legal/terms" title="Terms of Service" lede="Conditions for using Gather as an organizer or bidder.">
+  <h2>1. Agreement and parties</h2><p>By using Gather, a user agrees to these Terms and the applicable auction rules. The final version must identify Gather’s legal operating entity, registered address, contact email, governing law, and effective date.</p>
+  <h2>2. Platform role</h2><p>Gather provides technology for nonprofit auctions. Unless expressly stated, the nonprofit organizer is responsible for its auction items, descriptions, donor communications, event rules, fulfillment, and required charitable solicitation compliance.</p>
+  <h2>3. Accounts and acceptable use</h2><p>Users must provide accurate information, keep accounts secure, comply with law and auction rules, and refrain from fraudulent bids, auction interference, unauthorized access, infringement, misleading listings, and prohibited or illegal items.</p>
+  <h2>4. Bids and auction outcomes</h2><p>Placing a bid may create a binding commitment to purchase if the bidder wins, subject to the auction terms and applicable law. Maximum bidding, increments, tie rules, and anti-sniping extensions can affect outcomes.</p>
+  <h2>5. Fees and payments</h2><p>Gather’s platform commission is 5% of eligible auction transactions, allocated as selected by the organizer: paid by the nonprofit, paid by the winning bidder, or split between them. Processing fees are separate and must be presented before payment. The final schedule must define the fee base and treatment of donations, taxes, refunds, disputes, chargebacks, and fund flow.</p>
+  <h2>6. Items and fulfillment</h2><p>Organizers are responsible for donated items and their accuracy, condition, lawful transfer, pickup, and delivery unless stated otherwise. Travel experiences follow applicable Give Holidays package terms, availability, restrictions, and fulfillment arrangements.</p>
+  <h2>7. Refunds and disputes</h2><p>Refund requests, item disputes, payment errors, and travel cancellation requests follow the applicable event and item terms and mandatory legal rights. Final refund authority and payment procedures require approval before launch.</p>
+  <h2>8. Service availability and changes</h2><p>Gather may suspend abusive activity and take reasonable steps to protect auction integrity. Access may be interrupted for maintenance or technical issues.</p>
+  <h2>9. Intellectual property and content</h2><p>Users retain rights they hold in uploaded content and grant Gather the limited permissions necessary to display and operate it for auctions. Users must have the rights to upload listing photographs, names, and other materials.</p>
+  <h2>10. Liability and legal provisions</h2><p>Final counsel review must supply legally appropriate warranty disclaimers, liability limits, indemnity, dispute resolution, jurisdiction, severability, and consumer-protection provisions.</p>
+  <h2>11. Contact</h2><p>The final version will identify the verified legal and support contact.</p>
+  </DraftPolicyPage>; }
