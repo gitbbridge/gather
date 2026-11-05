@@ -91,7 +91,7 @@ export default function GiveHolidaysPage() {
             </div>
           </div>
 
-          <div className="relative min-h-[420px] overflow-hidden rounded-[38px_38px_38px_76px] bg-[#d5ebe2] shadow-[0_20px_50px_rgba(12,70,54,.08)]" style={referenceCrop(452, 106)} role="img" aria-label="Luxury tropical resort overlooking the ocean">
+          <div className="relative min-h-[420px] overflow-hidden rounded-[38px_38px_38px_76px] bg-[#d5ebe2] shadow-[0_20px_50px_rgba(12,70,54,.08)]" style={referenceCrop(470, 106)} role="img" aria-label="Luxury tropical resort overlooking the ocean">
             <div className="absolute inset-x-0 bottom-0 h-28 bg-[#d8ebe3]/95"/>
             <div className="absolute inset-x-5 bottom-5 z-10 grid grid-cols-3 gap-2 rounded-[24px] bg-white/95 px-5 py-4 shadow-xl backdrop-blur-sm">
               <div className="flex items-center justify-center gap-3 border-r border-[#dce8e2]"><Plane className="shrink-0 text-[#0c624e]" size={25}/><span className="text-[12px] font-bold leading-tight text-[#153d33]">Premium<br/>Destinations</span></div>
