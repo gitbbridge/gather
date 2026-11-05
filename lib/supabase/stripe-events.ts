@@ -97,6 +97,44 @@ export async function processStripeEvent(event: Stripe.Event) {
       ].includes(event.type)
     ) {
       const session = event.data.object as Stripe.Checkout.Session;
+      const sponsorAgreementId = session.metadata?.gather_sponsor_agreement_id;
+      if (sponsorAgreementId && session.mode === "setup" && session.status === "complete") {
+        const setupIntentId =
+          typeof session.setup_intent === "string"
+            ? session.setup_intent
+            : session.setup_intent?.id;
+        if (setupIntentId) {
+          const setupIntent = await stripe().setupIntents.retrieve(setupIntentId);
+          const paymentMethod =
+            typeof setupIntent.payment_method === "string"
+              ? setupIntent.payment_method
+              : setupIntent.payment_method?.id;
+          if (setupIntent.status === "succeeded" && paymentMethod) {
+            const now = new Date().toISOString();
+            await client
+              .from("fee_sponsorship_agreements")
+              .update({
+                stripe_payment_method_id: paymentMethod,
+                status: "active",
+                activated_at: now,
+                updated_at: now,
+              })
+              .eq("id", sponsorAgreementId)
+              .eq("stripe_setup_session_id", session.id)
+              .eq("status", "pending_payment_method");
+            await client.from("sponsor_payment_events").upsert(
+              {
+                agreement_id: sponsorAgreementId,
+                event_type: "authorized",
+                amount_cents: 0,
+                stripe_reference: setupIntent.id,
+                idempotency_key: `sponsor-authorized-${setupIntent.id}`,
+              },
+              { onConflict: "idempotency_key" },
+            );
+          }
+        }
+      }
       const directOfferOrderId = session.metadata?.gather_direct_offer_order_id;
       if (directOfferOrderId && session.payment_status === "paid") {
         const paymentIntent =
@@ -338,6 +376,64 @@ export async function processStripeEvent(event: Stripe.Event) {
       }
     } else if (event.type === "payment_intent.succeeded") {
       const intent = event.data.object as Stripe.PaymentIntent;
+      const sponsorStatementId = intent.metadata?.gather_sponsor_statement_id;
+      if (sponsorStatementId) {
+        const { data: statement, error: statementError } = await client
+          .from("sponsor_billing_statements")
+          .select("id,agreement_id,amount_cents,status")
+          .eq("id", sponsorStatementId)
+          .maybeSingle();
+        if (statementError) throw statementError;
+        if (statement && statement.status !== "paid") {
+          const now = new Date().toISOString();
+          await client
+            .from("sponsor_billing_statements")
+            .update({
+              status: "paid",
+              stripe_payment_intent_id: intent.id,
+              paid_at: now,
+              updated_at: now,
+            })
+            .eq("id", statement.id);
+          const { data: agreement } = await client
+            .from("fee_sponsorship_agreements")
+            .select("charged_cents")
+            .eq("id", statement.agreement_id)
+            .single();
+          await client
+            .from("fee_sponsorship_agreements")
+            .update({
+              charged_cents:
+                Number(agreement?.charged_cents || 0) +
+                Number(statement.amount_cents || 0),
+              updated_at: now,
+            })
+            .eq("id", statement.agreement_id);
+          const { data: links } = await client
+            .from("sponsor_statement_allocations")
+            .select("allocation_id")
+            .eq("statement_id", statement.id);
+          if (links?.length)
+            await client
+              .from("fee_sponsorship_allocations")
+              .update({ status: "collected", updated_at: now })
+              .in(
+                "id",
+                links.map((link) => link.allocation_id),
+              );
+          await client.from("sponsor_payment_events").upsert(
+            {
+              agreement_id: statement.agreement_id,
+              statement_id: statement.id,
+              event_type: "charged",
+              amount_cents: statement.amount_cents,
+              stripe_reference: intent.id,
+              idempotency_key: `sponsor-charged-${intent.id}`,
+            },
+            { onConflict: "idempotency_key" },
+          );
+        }
+      }
       const invoiceId = intent.metadata?.gather_invoice_id;
       if (invoiceId) {
         const details = await paymentDetails(intent.id, event.account);
@@ -354,6 +450,38 @@ export async function processStripeEvent(event: Stripe.Event) {
       }
     } else if (event.type === "payment_intent.payment_failed") {
       const intent = event.data.object as Stripe.PaymentIntent;
+      const sponsorStatementId = intent.metadata?.gather_sponsor_statement_id;
+      if (sponsorStatementId) {
+        const { data: statement } = await client
+          .from("sponsor_billing_statements")
+          .update({
+            status: "failed",
+            last_error:
+              intent.last_payment_error?.message?.slice(0, 1000) ||
+              "Sponsor payment failed.",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", sponsorStatementId)
+          .select("id,agreement_id,amount_cents")
+          .maybeSingle();
+        if (statement) {
+          await client
+            .from("fee_sponsorship_agreements")
+            .update({ status: "payment_failed", updated_at: new Date().toISOString() })
+            .eq("id", statement.agreement_id);
+          await client.from("sponsor_payment_events").upsert(
+            {
+              agreement_id: statement.agreement_id,
+              statement_id: statement.id,
+              event_type: "failed",
+              amount_cents: statement.amount_cents,
+              stripe_reference: intent.id,
+              idempotency_key: `sponsor-failed-${event.id}`,
+            },
+            { onConflict: "idempotency_key" },
+          );
+        }
+      }
       const invoiceId = intent.metadata?.gather_invoice_id;
       if (invoiceId) {
         await client
