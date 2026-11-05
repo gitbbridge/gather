@@ -15,6 +15,15 @@ test("existing organizers enter nonprofit admin", () =>
     roleDestination({ target: "/", organizer: true, accountType: "organizer" }),
     "/admin",
   ));
+test("returning organizers do not repeat onboarding after sign in", () =>
+  assert.equal(
+    roleDestination({
+      target: "/onboarding",
+      organizer: true,
+      accountType: "organizer",
+    }),
+    "/admin",
+  ));
 test("supporters enter supporter home", () =>
   assert.equal(
     roleDestination({
