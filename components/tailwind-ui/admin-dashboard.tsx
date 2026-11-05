@@ -10,6 +10,7 @@ import {
   ExternalLink,
   HandCoins,
   Handshake,
+  Gavel,
   History,
   LayoutTemplate,
   Mail,
@@ -62,6 +63,7 @@ type AdminDashboardProps = {
   onDirectOffers: () => void;
   onTickets: () => void;
   onSponsors: () => void;
+  onLive: () => void;
   onHomepage: () => void;
   onConnectPayments: () => void;
   onOpenAuction: (auctionId: string) => void;
@@ -89,6 +91,7 @@ export function AdminDashboard({
   onDirectOffers,
   onTickets,
   onSponsors,
+  onLive,
   onHomepage,
   onConnectPayments,
   onOpenAuction,
@@ -180,6 +183,10 @@ export function AdminDashboard({
           <Button variant="outline" onClick={onSponsors} disabled={!nonprofit}>
             <Handshake size={16} />
             Sponsors
+          </Button>
+          <Button variant="outline" onClick={onLive} disabled={!nonprofit}>
+            <Gavel size={16} />
+            Gather Live
           </Button>
           <Button variant="outline" onClick={onSettlement}>
             <HandCoins size={16} />
