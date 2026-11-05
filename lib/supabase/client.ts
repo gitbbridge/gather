@@ -1,12 +1,12 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
-import type { SupabasePublicConfig } from './config';
+import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from './config';
 
-export function createSupabaseBrowserClient(config: SupabasePublicConfig) {
-  if (!config.url || !config.publishableKey) {
-    throw new Error('Account access is temporarily unavailable. Please contact Gather support.');
+export function createSupabaseBrowserClient() {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured. Add the project publishable key to .env.local.');
   }
 
-  return createBrowserClient(config.url, config.publishableKey);
+  return createBrowserClient(supabaseUrl, supabasePublishableKey);
 }

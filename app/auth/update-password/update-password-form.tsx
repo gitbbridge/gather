@@ -5,9 +5,8 @@ import { CheckCircle2, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
-import type { SupabasePublicConfig } from '@/lib/supabase/config';
 
-export default function UpdatePasswordForm({ config }: { config: SupabasePublicConfig }) {
+export default function UpdatePasswordForm() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [complete, setComplete] = useState(false);
@@ -30,7 +29,7 @@ export default function UpdatePasswordForm({ config }: { config: SupabasePublicC
       return;
     }
     try {
-      const { error } = await createSupabaseBrowserClient(config).auth.updateUser({ password });
+      const { error } = await createSupabaseBrowserClient().auth.updateUser({ password });
       if (error) throw error;
       setComplete(true);
       setMessage('Your password has been updated.');

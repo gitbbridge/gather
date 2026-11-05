@@ -1,13 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getSupabasePublicConfig, isSupabaseConfigured } from './config';
+import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from './config';
 
 export async function createSupabaseServerClient() {
-  const config = getSupabasePublicConfig();
-  if (!isSupabaseConfigured(config)) return null;
+  if (!isSupabaseConfigured) return null;
 
   const cookieStore = await cookies();
-  return createServerClient(config.url, config.publishableKey, {
+  return createServerClient(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

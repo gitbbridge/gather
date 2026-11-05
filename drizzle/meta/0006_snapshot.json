@@ -1,273 +1,9 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cb1ddd2a-ab42-46a2-b254-d83212541022",
+  "id": "f11780a1-01a2-40bb-9174-ddfc1f574d9e",
   "prevId": "491090ee-5476-4bb2-93c4-0a85b2599667",
   "tables": {
-    "assistant_conversations": {
-      "name": "assistant_conversations",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "nonprofit_id": {
-          "name": "nonprofit_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "auction_id": {
-          "name": "auction_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "item_id": {
-          "name": "item_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_email": {
-          "name": "user_email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "audience": {
-          "name": "audience",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'active'"
-        },
-        "subject": {
-          "name": "subject",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "escalated_at": {
-          "name": "escalated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "resolved_at": {
-          "name": "resolved_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "idx_assistant_conversations_nonprofit": {
-          "name": "idx_assistant_conversations_nonprofit",
-          "columns": [
-            "nonprofit_id",
-            "status"
-          ],
-          "isUnique": false
-        },
-        "idx_assistant_conversations_user": {
-          "name": "idx_assistant_conversations_user",
-          "columns": [
-            "user_id",
-            "updated_at"
-          ],
-          "isUnique": false
-        },
-        "idx_assistant_conversations_auction": {
-          "name": "idx_assistant_conversations_auction",
-          "columns": [
-            "auction_id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "assistant_conversations_nonprofit_id_nonprofits_id_fk": {
-          "name": "assistant_conversations_nonprofit_id_nonprofits_id_fk",
-          "tableFrom": "assistant_conversations",
-          "tableTo": "nonprofits",
-          "columnsFrom": [
-            "nonprofit_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "assistant_conversations_auction_id_auctions_id_fk": {
-          "name": "assistant_conversations_auction_id_auctions_id_fk",
-          "tableFrom": "assistant_conversations",
-          "tableTo": "auctions",
-          "columnsFrom": [
-            "auction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "assistant_messages": {
-      "name": "assistant_messages",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "conversation_id": {
-          "name": "conversation_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "sender": {
-          "name": "sender",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "needs_escalation": {
-          "name": "needs_escalation",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "model": {
-          "name": "model",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "input_tokens": {
-          "name": "input_tokens",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "output_tokens": {
-          "name": "output_tokens",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "latency_ms": {
-          "name": "latency_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "idx_assistant_messages_conversation": {
-          "name": "idx_assistant_messages_conversation",
-          "columns": [
-            "conversation_id",
-            "created_at"
-          ],
-          "isUnique": false
-        },
-        "idx_assistant_messages_created": {
-          "name": "idx_assistant_messages_created",
-          "columns": [
-            "created_at"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "assistant_messages_conversation_id_assistant_conversations_id_fk": {
-          "name": "assistant_messages_conversation_id_assistant_conversations_id_fk",
-          "tableFrom": "assistant_messages",
-          "tableTo": "assistant_conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "auctions": {
       "name": "auctions",
       "columns": {
@@ -331,6 +67,183 @@
           "tableTo": "nonprofits",
           "columnsFrom": [
             "nonprofit_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "audit_events": {
+      "name": "audit_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "auction_id": {
+          "name": "auction_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "record_type": {
+          "name": "record_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "record_id": {
+          "name": "record_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actor_role": {
+          "name": "actor_role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "previous_state": {
+          "name": "previous_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "new_state": {
+          "name": "new_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "authorization_reference": {
+          "name": "authorization_reference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_system": {
+          "name": "source_system",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'gather_d1'"
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "previous_integrity_hash": {
+          "name": "previous_integrity_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "integrity_hash": {
+          "name": "integrity_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_audit_events_auction_time": {
+          "name": "idx_audit_events_auction_time",
+          "columns": [
+            "auction_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_audit_events_organization_time": {
+          "name": "idx_audit_events_organization_time",
+          "columns": [
+            "organization_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_audit_events_record": {
+          "name": "idx_audit_events_record",
+          "columns": [
+            "record_type",
+            "record_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_audit_events_correlation": {
+          "name": "idx_audit_events_correlation",
+          "columns": [
+            "correlation_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "audit_events_auction_id_auctions_id_fk": {
+          "name": "audit_events_auction_id_auctions_id_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "auctions",
+          "columnsFrom": [
+            "auction_id"
           ],
           "columnsTo": [
             "id"

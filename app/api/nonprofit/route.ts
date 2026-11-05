@@ -1,6 +1,7 @@
 import { getAppUser } from '@/lib/auth';
 import { database,nonprofitById,nonprofitBySlug,nonprofitInsert,publicNonprofit } from '@/lib/nonprofits';
 import { z } from 'zod';
+import { recordSupporterActivity } from '@/lib/supabase/supporters';
 export const dynamic='force-dynamic';
 const form=z.discriminatedUnion('action',[
  z.object({action:z.literal('setup'),auctionId:z.string().min(1).max(100)}),
@@ -27,5 +28,6 @@ export async function POST(req:Request){try{
  const n=await nonprofitBySlug(x.slug);if(!n)return json({error:'Nonprofit not found.'},404);
  const auction=await db.prepare('SELECT id FROM auctions WHERE id=? AND nonprofit_id=?').bind(x.auctionId,n.id).first();if(!auction)return json({error:'Auction not found for this nonprofit.'},404);
  await db.prepare('INSERT INTO registrations (nonprofit_id,user_id,name,email,created_at) VALUES (?,?,?,?,?) ON CONFLICT(nonprofit_id,user_id) DO NOTHING').bind(n.id,user.userId,x.name,user.email,Date.now()).run();
+ try{await recordSupporterActivity({organizationId:n.id,userId:user.userId,email:user.email,fullName:x.name,source:'auction_registration',type:'auction_registration',dedupeKey:`registration-${x.auctionId}-${user.userId}`,auctionId:x.auctionId,metadata:{auctionId:x.auctionId}})}catch(error){console.error('Unable to sync supporter registration:',error)}
  const destination=`/n/${n.slug}/auction/${x.auctionId}`+(x.item?'?item='+encodeURIComponent(x.item):'');return json({destination});
  }catch(e){console.error(e);return json({error:'Unable to save. Please try again.'},500);}}

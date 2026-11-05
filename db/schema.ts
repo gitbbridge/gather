@@ -60,38 +60,30 @@ export const nonprofitPaymentAccounts = sqliteTable('nonprofit_payment_accounts'
   updatedAt: integer('updated_at').notNull(),
 }, t => [index('idx_payment_accounts_status').on(t.status)]);
 
-export const assistantConversations = sqliteTable('assistant_conversations', {
+// D1 is the authoritative store for the current auction state. Audit events
+// are deliberately separate from that mutable state so corrections can be
+// added without rewriting the original history.
+export const auditEvents = sqliteTable('audit_events', {
   id: text('id').primaryKey(),
-  nonprofitId: text('nonprofit_id').references(() => nonprofits.id),
+  organizationId: text('organization_id'),
   auctionId: text('auction_id').references(() => auctions.id),
-  itemId: text('item_id'),
-  userId: text('user_id').notNull(),
-  userEmail: text('user_email'),
-  audience: text('audience').notNull(),
-  status: text('status').notNull().default('active'),
-  subject: text('subject').notNull(),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-  escalatedAt: integer('escalated_at'),
-  resolvedAt: integer('resolved_at'),
-}, t => [
-  index('idx_assistant_conversations_nonprofit').on(t.nonprofitId, t.status),
-  index('idx_assistant_conversations_user').on(t.userId, t.updatedAt),
-  index('idx_assistant_conversations_auction').on(t.auctionId),
-]);
-
-export const assistantMessages = sqliteTable('assistant_messages', {
-  id: text('id').primaryKey(),
-  conversationId: text('conversation_id').notNull().references(() => assistantConversations.id),
-  sender: text('sender').notNull(),
-  body: text('body').notNull(),
-  needsEscalation: integer('needs_escalation', { mode: 'boolean' }).notNull().default(false),
-  model: text('model'),
-  inputTokens: integer('input_tokens'),
-  outputTokens: integer('output_tokens'),
-  latencyMs: integer('latency_ms'),
+  recordType: text('record_type').notNull(),
+  recordId: text('record_id').notNull(),
+  action: text('action').notNull(),
+  actorId: text('actor_id').notNull(),
+  actorRole: text('actor_role').notNull(),
+  previousState: text('previous_state'),
+  newState: text('new_state'),
+  reason: text('reason'),
+  authorizationReference: text('authorization_reference'),
+  sourceSystem: text('source_system').notNull().default('gather_d1'),
+  correlationId: text('correlation_id').notNull(),
+  previousIntegrityHash: text('previous_integrity_hash'),
+  integrityHash: text('integrity_hash').notNull(),
   createdAt: integer('created_at').notNull(),
 }, t => [
-  index('idx_assistant_messages_conversation').on(t.conversationId, t.createdAt),
-  index('idx_assistant_messages_created').on(t.createdAt),
+  index('idx_audit_events_auction_time').on(t.auctionId, t.createdAt),
+  index('idx_audit_events_organization_time').on(t.organizationId, t.createdAt),
+  index('idx_audit_events_record').on(t.recordType, t.recordId, t.createdAt),
+  index('idx_audit_events_correlation').on(t.correlationId),
 ]);

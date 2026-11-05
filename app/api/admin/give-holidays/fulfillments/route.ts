@@ -1,13 +1,51 @@
-import {z} from 'zod';
-import {getAppUser} from '@/lib/auth';
-import {isPlatformAdmin} from '@/lib/platform-admin';
-import {createSupabaseAdminClient} from '@/lib/supabase/admin';
-import {safelySendTrackedTemplateEmail} from '@/lib/email/notifications';
+import { z } from 'zod';
+import { getAppUser } from '@/lib/auth';
+import { isPlatformAdmin } from '@/lib/platform-admin';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { safelySendTrackedTemplateEmail } from '@/lib/email/notifications';
+import { recordSupporterActivity, supporterIdentity } from '@/lib/supabase/supporters';
 
-export const dynamic='force-dynamic';
-const update=z.object({id:z.string().uuid(),status:z.enum(['paid_details_needed','traveler_details_submitted','dates_requested','booking_in_progress','confirmed','fulfilled','cancelled','refunded']),providerReference:z.string().trim().max(200).optional()});
-const json=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
-async function allowed(){return isPlatformAdmin(await getAppUser())}
+export const dynamic = 'force-dynamic';
+const update = z.object({ id: z.string().uuid(), status: z.enum(['paid_details_needed','traveler_details_submitted','dates_requested','booking_in_progress','confirmed','fulfilled','cancelled','refunded']), providerReference: z.string().trim().max(200).optional() });
+const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
+async function allowed() { return isPlatformAdmin(await getAppUser()); }
 
-export async function GET(){try{if(!await allowed())return json({error:'Platform administrator access required.'},403);const {data,error}=await createSupabaseAdminClient().from('fulfillments').select(`id,status,provider_reference,created_at,updated_at,winner_invoice_items(hammer_price_cents,auction_items(title,travel_package_snapshot),winner_invoices(payer_id,paid_at,auctions(name))),traveler_claims(traveler_details,preferred_dates,submitted_at)`).eq('fulfillment_type','give_holidays').order('created_at',{ascending:false});if(error)throw error;return json({fulfillments:data||[]})}catch(error){console.error(error);return json({error:'Unable to load fulfillment queue.'},500)}}
-export async function PATCH(request:Request){try{if(request.headers.get('origin')!==new URL(request.url).origin)return json({error:'Invalid request origin.'},403);if(!await allowed())return json({error:'Platform administrator access required.'},403);const parsed=update.safeParse(await request.json());if(!parsed.success)return json({error:'Choose a valid fulfillment status.'},400);const {id,status,providerReference}=parsed.data;const client=createSupabaseAdminClient();const {data:row,error}=await client.from('fulfillments').update({status,provider_reference:providerReference||null,fulfilled_at:status==='fulfilled'?new Date().toISOString():null}).eq('id',id).eq('fulfillment_type','give_holidays').select(`id,status,provider_reference,winner_invoice_items(auction_items(title,travel_package_snapshot),winner_invoices(payer_id,auction_id,auctions(name,organizations(display_name)))),traveler_claims(traveler_details,preferred_dates)`).single();if(error)throw error;const line=Array.isArray(row.winner_invoice_items)?row.winner_invoice_items[0]:row.winner_invoice_items;const item=Array.isArray(line?.auction_items)?line.auction_items[0]:line?.auction_items;const invoice=Array.isArray(line?.winner_invoices)?line.winner_invoices[0]:line?.winner_invoices;const auction=Array.isArray(invoice?.auctions)?invoice.auctions[0]:invoice?.auctions;const organization=Array.isArray(auction?.organizations)?auction.organizations[0]:auction?.organizations;const claim=Array.isArray(row.traveler_claims)?row.traveler_claims[0]:row.traveler_claims;const terms=(item?.travel_package_snapshot||{}) as Record<string,unknown>;const origin=(process.env.APP_URL||'https://gatherforgood.bid').replace(/\/$/,'');const common={userId:invoice?.payer_id||'',auctionId:invoice?.auction_id||null,dedupeKey:`travel-${status}-${id}`,values:{}};if(invoice?.payer_id&&status==='dates_requested')await safelySendTrackedTemplateEmail({...common,templateId:'travel-dates-requested',values:{packageTitle:item?.title||'Give Holidays experience',preferredDates:(claim?.preferred_dates||[]).join(', ')||'See your submitted request',bookingLeadTime:terms.bookingLeadTimeDays?`${terms.bookingLeadTimeDays} days`:'See package terms',myWinsUrl:`${origin}/my-wins`}});if(invoice?.payer_id&&status==='confirmed')await safelySendTrackedTemplateEmail({...common,templateId:'travel-confirmed',values:{packageTitle:item?.title||'Give Holidays experience',confirmationReference:providerReference||'See booking details',confirmedDates:(claim?.preferred_dates||[]).join(', ')||'See booking details',travelerNames:(claim?.traveler_details?.names||[]).join(', ')||'See booking details',myWinsUrl:`${origin}/my-wins`}});if(invoice?.payer_id&&status==='fulfilled')await safelySendTrackedTemplateEmail({...common,templateId:'travel-fulfilled',values:{packageTitle:item?.title||'Give Holidays experience',organizationName:organization?.display_name||auction?.name||'the nonprofit',myWinsUrl:`${origin}/my-wins`}});return json({ok:true})}catch(error){console.error(error);return json({error:'Unable to update fulfillment.'},500)}}
+export async function GET() {
+  try {
+    if (!await allowed()) return json({ error: 'Platform administrator access required.' }, 403);
+    const { data, error } = await createSupabaseAdminClient().from('fulfillments').select(`id,status,provider_reference,created_at,updated_at,winner_invoice_items(hammer_price_cents,auction_items(title,travel_package_snapshot),winner_invoices(payer_id,paid_at,auctions(name))),traveler_claims(traveler_details,preferred_dates,submitted_at)`).eq('fulfillment_type', 'give_holidays').order('created_at', { ascending: false });
+    if (error) throw error;
+    return json({ fulfillments: data || [] });
+  } catch (error) { console.error(error); return json({ error: 'Unable to load fulfillment queue.' }, 500); }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    if (request.headers.get('origin') !== new URL(request.url).origin) return json({ error: 'Invalid request origin.' }, 403);
+    if (!await allowed()) return json({ error: 'Platform administrator access required.' }, 403);
+    const parsed = update.safeParse(await request.json());
+    if (!parsed.success) return json({ error: 'Choose a valid fulfillment status.' }, 400);
+    const { id, status, providerReference } = parsed.data;
+    const client = createSupabaseAdminClient();
+    const changedAt = new Date().toISOString();
+    const { data: row, error } = await client.from('fulfillments').update({ status, status_changed_at: changedAt, provider_reference: providerReference || null, fulfilled_at: status === 'fulfilled' ? changedAt : null }).eq('id', id).eq('fulfillment_type', 'give_holidays').select(`id,status,provider_reference,winner_invoice_items(auction_items(id,title,travel_package_snapshot),winner_invoices(id,payer_id,auction_id,auctions(name,organization_id,organizations(display_name)))),traveler_claims(traveler_details,preferred_dates)`).single();
+    if (error) throw error;
+    const line = Array.isArray(row.winner_invoice_items) ? row.winner_invoice_items[0] : row.winner_invoice_items;
+    const item = Array.isArray(line?.auction_items) ? line.auction_items[0] : line?.auction_items;
+    const invoice = Array.isArray(line?.winner_invoices) ? line.winner_invoices[0] : line?.winner_invoices;
+    const auction = Array.isArray(invoice?.auctions) ? invoice.auctions[0] : invoice?.auctions;
+    const organization = Array.isArray(auction?.organizations) ? auction.organizations[0] : auction?.organizations;
+    const claim = Array.isArray(row.traveler_claims) ? row.traveler_claims[0] : row.traveler_claims;
+    const terms = (item?.travel_package_snapshot || {}) as Record<string, unknown>;
+    const origin = (process.env.APP_URL || 'https://gatherforgood.bid').replace(/\/$/, '');
+    const common = { userId: invoice?.payer_id || '', auctionId: invoice?.auction_id || null, dedupeKey: `travel-${status}-${id}`, values: {} };
+    if (invoice?.payer_id && status === 'dates_requested') await safelySendTrackedTemplateEmail({ ...common, templateId: 'travel-dates-requested', values: { packageTitle: item?.title || 'Give Holidays experience', preferredDates: (claim?.preferred_dates || []).join(', ') || 'See your submitted request', bookingLeadTime: terms.bookingLeadTimeDays ? `${terms.bookingLeadTimeDays} days` : 'See package terms', myWinsUrl: `${origin}/my-wins` } });
+    if (invoice?.payer_id && status === 'confirmed') await safelySendTrackedTemplateEmail({ ...common, templateId: 'travel-confirmed', values: { packageTitle: item?.title || 'Give Holidays experience', confirmationReference: providerReference || 'See booking details', confirmedDates: (claim?.preferred_dates || []).join(', ') || 'See booking details', travelerNames: (claim?.traveler_details?.names || []).join(', ') || 'See booking details', myWinsUrl: `${origin}/my-wins` } });
+    if (invoice?.payer_id && status === 'fulfilled') await safelySendTrackedTemplateEmail({ ...common, templateId: 'travel-fulfilled', values: { packageTitle: item?.title || 'Give Holidays experience', organizationName: organization?.display_name || auction?.name || 'the nonprofit', myWinsUrl: `${origin}/my-wins` } });
+    if (invoice?.payer_id && auction?.organization_id) {
+      const identity = await supporterIdentity(invoice.payer_id);
+      await recordSupporterActivity({ organizationId: auction.organization_id, userId: invoice.payer_id, email: identity.email, fullName: identity.fullName, source: 'payment', type: 'fulfillment_status_changed', dedupeKey: `fulfillment-${id}-${status}`, auctionId: invoice.auction_id, itemId: item?.id || null, invoiceId: invoice.id, fulfillmentId: id, occurredAt: changedAt, metadata: { status, packageTitle: item?.title || '' } });
+    }
+    return json({ ok: true });
+  } catch (error) { console.error(error); return json({ error: 'Unable to update fulfillment.' }, 500); }
+}
