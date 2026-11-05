@@ -171,6 +171,11 @@ export default function AdminClient() {
           `/admin/sponsors?organization=${encodeURIComponent(data.nonprofit?.id || "")}&auction=${encodeURIComponent(data.id)}`,
         )
       }
+      onLive={() =>
+        window.location.assign(
+          `/admin/live?auction=${encodeURIComponent(data.id)}`,
+        )
+      }
       onHomepage={() =>
         window.location.assign(
           `/homepage?nonprofit=${encodeURIComponent(data.nonprofit?.id || "")}`,
