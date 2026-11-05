@@ -23,9 +23,10 @@ export function HelpPolicyLayout({ active, title, lede, status, children }: { ac
         <Link href="/support" className="text-sm font-semibold text-[#175b47] hover:underline">Contact support</Link>
       </div>
     </header>
-    <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:py-12">
-      <nav aria-label="Help and policies" className="flex gap-2 overflow-x-auto pb-2 lg:block lg:space-y-1 lg:overflow-visible">
-        {pages.map(([href, label]) => <Link key={href} href={href} aria-current={active === href ? 'page' : undefined} className={`shrink-0 rounded-lg px-3 py-2 text-sm ${active === href ? 'bg-[#e5efe9] font-semibold text-[#175b47]' : 'text-[#586b62] hover:bg-white hover:text-[#175b47]'}`}>{label}</Link>)}
+    <div className="mx-auto grid max-w-6xl gap-6 px-5 py-7 sm:px-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12 lg:py-12">
+      <nav aria-label="Help and policies" className="flex gap-2 overflow-x-auto pb-2 lg:sticky lg:top-6 lg:flex-col lg:self-start lg:overflow-visible lg:pb-0">
+        <p className="hidden px-3 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#829087] lg:block">Help &amp; policies</p>
+        {pages.map(([href, label]) => <Link key={href} href={href} aria-current={active === href ? 'page' : undefined} className={`block shrink-0 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm transition-colors ${active === href ? 'bg-[#e5efe9] font-semibold text-[#175b47]' : 'text-[#586b62] hover:bg-white hover:text-[#175b47]'}`}>{label}</Link>)}
       </nav>
       <article className="min-w-0 rounded-2xl border border-[#dfe7e2] bg-white p-6 shadow-sm sm:p-10 lg:p-12 [&_a]:font-medium [&_a]:text-[#175b47] [&_a]:underline-offset-4 hover:[&_a]:underline [&_h2]:mb-3 [&_h2]:mt-9 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:font-semibold [&_li]:my-2 [&_ol]:ml-6 [&_ol]:list-decimal [&_p]:mb-4 [&_p]:leading-7 [&_ul]:ml-6 [&_ul]:list-disc">
         <h1 className="text-4xl font-semibold tracking-[-0.04em] text-[#193d30]">{title}</h1>

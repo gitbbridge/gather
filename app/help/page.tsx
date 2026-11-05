@@ -5,13 +5,23 @@ export const metadata = { title: 'Help Center | Gather', description: 'Straightf
 
 export default function HelpCenterPage() {
   return <HelpPolicyLayout active="/help" title="Help Center" lede="Straightforward answers for auction organizers and bidders.">
-    <h2>Get started</h2>
-    <p><Link href="/help/organizers">Organizing an auction</Link> — Set up your organization, add items, choose how fees are covered, and review everything before launch.</p>
-    <p><Link href="/help/bidders">Bidding in an auction</Link> — Find items, place bids, and understand what happens when you win.</p>
-    <p><Link href="/help/fees">Fees and payments</Link> — Understand Gather’s 5% platform commission, configurable allocation, and separate payment-processing fees.</p>
-    <p><Link href="/help/travel">Give Holidays experiences</Link> — Review package terms and the process for claiming a paid experience.</p>
-    <h2>Policies and assistance</h2>
-    <p><Link href="/legal/refunds">Refunds and fulfillment</Link> · <Link href="/legal/privacy">Privacy</Link> · <Link href="/legal/terms">Terms</Link> · <Link href="/legal/cookies">Cookies</Link> · <Link href="/support">Contact support</Link></p>
-    <div className="mt-8 rounded-xl border-l-4 border-[#a79260] bg-[#f8f7f1] p-5 text-sm leading-6"><strong>Launch status:</strong> Gather is in production-readiness testing. Confirm payment, invoice, and fulfillment behavior before enabling a live-money auction.</div>
+    <h2 className="!mt-0">How can we help?</h2>
+    <div className="grid gap-4 sm:grid-cols-2">
+      {[
+        ['/help/organizers', 'Organize an auction', 'Set up your organization, add items, choose fees, and launch with confidence.'],
+        ['/help/bidders', 'Register and bid', 'Create an account, place bids, use maximum bidding, and understand what happens when you win.'],
+        ['/help/fees', 'Fees and payments', 'See how the 5% platform commission and separate processing fees are calculated.'],
+        ['/help/travel', 'Give Holidays experiences', 'Understand travel package terms, payment, claiming, and fulfillment.'],
+      ].map(([href, heading, copy]) => <Link key={href} href={href} className="group rounded-xl border border-[#dfe7e2] p-5 !no-underline transition hover:border-[#9fbcaa] hover:bg-[#f7faf8]">
+        <span className="block text-base font-semibold text-[#193d30] group-hover:text-[#175b47]">{heading} <span aria-hidden="true">→</span></span>
+        <span className="mt-2 block text-sm font-normal leading-6 text-[#63736a]">{copy}</span>
+      </Link>)}
+    </div>
+    <div className="mt-8 rounded-xl bg-[#edf4ef] p-6">
+      <h2 className="!m-0 text-xl">Still need help?</h2>
+      <p className="!mb-0 mt-2 text-sm">Visit <Link href="/support">Contact Support</Link> or email <a href="mailto:support@gatherforgood.bid">support@gatherforgood.bid</a>. Include the auction name and item title when applicable—never send a password or full card number.</p>
+    </div>
+    <h2>Policies and fulfillment</h2>
+    <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm"><Link href="/legal/refunds">Refunds &amp; Fulfillment</Link><Link href="/legal/privacy">Privacy Policy</Link><Link href="/legal/terms">Terms of Service</Link><Link href="/legal/cookies">Cookie Policy</Link></div>
   </HelpPolicyLayout>;
 }

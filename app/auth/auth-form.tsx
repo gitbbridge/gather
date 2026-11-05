@@ -5,8 +5,9 @@ import { ArrowLeft, ArrowRight, LoaderCircle, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import type { SupabasePublicConfig } from '@/lib/supabase/config';
 
-export function AuthForm({ returnTo, initialMode = 'signin', initialMessage = '' }: { returnTo: string; initialMode?: 'signin' | 'signup' | 'forgot'; initialMessage?: string }) {
+export function AuthForm({ config, returnTo, initialMode = 'signin', initialMessage = '' }: { config: SupabasePublicConfig; returnTo: string; initialMode?: 'signin' | 'signup' | 'forgot'; initialMessage?: string }) {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(initialMessage);
@@ -21,7 +22,7 @@ export function AuthForm({ returnTo, initialMode = 'signin', initialMessage = ''
     const fullName = String(form.get('fullName') || '').trim();
 
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(config);
       if (mode === 'forgot') {
         const redirectTo = `${window.location.origin}/auth/callback?return_to=${encodeURIComponent('/auth/update-password')}`;
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
