@@ -59,3 +59,31 @@ export const nonprofitPaymentAccounts = sqliteTable('nonprofit_payment_accounts'
   livemode: integer('livemode', { mode: 'boolean' }).notNull().default(false),
   updatedAt: integer('updated_at').notNull(),
 }, t => [index('idx_payment_accounts_status').on(t.status)]);
+
+// D1 is the authoritative store for the current auction state. Audit events
+// are deliberately separate from that mutable state so corrections can be
+// added without rewriting the original history.
+export const auditEvents = sqliteTable('audit_events', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id'),
+  auctionId: text('auction_id').references(() => auctions.id),
+  recordType: text('record_type').notNull(),
+  recordId: text('record_id').notNull(),
+  action: text('action').notNull(),
+  actorId: text('actor_id').notNull(),
+  actorRole: text('actor_role').notNull(),
+  previousState: text('previous_state'),
+  newState: text('new_state'),
+  reason: text('reason'),
+  authorizationReference: text('authorization_reference'),
+  sourceSystem: text('source_system').notNull().default('gather_d1'),
+  correlationId: text('correlation_id').notNull(),
+  previousIntegrityHash: text('previous_integrity_hash'),
+  integrityHash: text('integrity_hash').notNull(),
+  createdAt: integer('created_at').notNull(),
+}, t => [
+  index('idx_audit_events_auction_time').on(t.auctionId, t.createdAt),
+  index('idx_audit_events_organization_time').on(t.organizationId, t.createdAt),
+  index('idx_audit_events_record').on(t.recordType, t.recordId, t.createdAt),
+  index('idx_audit_events_correlation').on(t.correlationId),
+]);

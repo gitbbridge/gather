@@ -9,6 +9,11 @@ test('help navigation includes every supplied page', () => {
   for (const route of ['/help','/help/organizers','/help/bidders','/help/fees','/help/travel','/legal/privacy','/legal/terms','/legal/cookies','/legal/refunds','/support']) {
     assert.match(layout, new RegExp(route.replaceAll('/', '\\/')));
   }
+  assert.match(layout, /label: 'Guides'/);
+  assert.match(layout, /label: 'Policies'/);
+  assert.match(layout, /<a key=\{href\} href=\{href\}/);
+  assert.match(layout, /w-full items-center justify-between/);
+  assert.doesNotMatch(layout, /<Link key=\{href\}/);
 });
 
 test('draft legal content is review-gated until explicitly published', () => {

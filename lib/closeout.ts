@@ -3,7 +3,7 @@ import type { Auction } from './auction';
 export type Registration = { userId: string; name: string; email: string };
 export type CloseoutStatus = { userId: string; pickupStatus: string; followupStatus: string };
 export type ParticipantCloseout = {
-  userId: string; name: string; email: string; bidderNumber: string;
+  userId: string; supporterId?: string; name: string; email: string; bidderNumber: string;
   bidCount: number; itemsWon: string[]; winningBidTotal: number;
   donationTotal: number; buyNowTotal: number; totalCommitment: number;
   activity: string[]; paymentStatus: 'not_collected_test_mode';

@@ -2,9 +2,12 @@ import type { Auction } from '@/lib/auction';
 import { buildWinnerInvoiceDrafts } from '@/lib/invoices';
 import { createSupabaseAdminClient } from './admin';
 import { dateTime, money, safelySendTrackedTemplateEmail } from '@/lib/email/notifications';
+import { recordSupporterActivity, supporterIdentity } from './supporters';
 
 export async function generateWinnerInvoices(auctionId: string, auction: Auction) {
   const client = createSupabaseAdminClient();
+  const { data: auctionRecord, error: auctionRecordError } = await client.from('auctions').select('organization_id').eq('id', auctionId).single();
+  if (auctionRecordError) throw auctionRecordError;
   const itemIds = auction.items.map(item => item.id);
   const { data: itemRows, error: itemError } = itemIds.length
     ? await client.from('auction_items').select('id,auction_item_settlements(wholesale_cost_cents,gather_markup_cents)').in('id', itemIds)
@@ -79,6 +82,13 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
         values: { auctionName: auction.name, hammerSubtotal: money(draft.hammerSubtotalCents), bidderFee: money(draft.bidderPlatformFeeCents), totalDue: money(draft.totalDueCents), dueDate: dateTime(dueAt), checkoutUrl: `${origin}/my-wins` },
       }),
     ]);
+    try {
+      const identity = await supporterIdentity(draft.payerId);
+      for (const line of draft.lines) {
+        await recordSupporterActivity({ organizationId: auctionRecord.organization_id, userId: draft.payerId, email: identity.email, fullName: identity.fullName, source: 'auction_winner', type: 'item_won', dedupeKey: `winner-${line.itemId}`, auctionId, itemId: line.itemId, invoiceId: invoice.id, amountCents: line.hammerPriceCents, metadata: { itemTitle: line.title } });
+        if (line.source === 'give-holidays') await recordSupporterActivity({ organizationId: auctionRecord.organization_id, userId: draft.payerId, email: identity.email, fullName: identity.fullName, source: 'auction_winner', type: 'travel_package_selected', dedupeKey: `travel-package-${line.itemId}`, auctionId, itemId: line.itemId, invoiceId: invoice.id, amountCents: line.hammerPriceCents, metadata: { itemTitle: line.title } });
+      }
+    } catch (supporterError) { console.error('Unable to sync winner supporter activity:', supporterError); }
     // A winning bid is not a travel obligation. Stripe's paid webhook creates
     // fulfillment records after the combined invoice is actually paid.
     totalDueCents += draft.totalDueCents;
