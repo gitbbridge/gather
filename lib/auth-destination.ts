@@ -20,11 +20,21 @@ export async function postAuthDestination(user: AppUser, requested = "/") {
     /* Supabase membership remains the fallback. */
   }
   const client = createSupabaseAdminClient();
-  const [{ data: membership }, { data: profile }] = await Promise.all([
+  const [
+    { data: membership },
+    { data: existingAuction },
+    { data: profile },
+  ] = await Promise.all([
     client
       .from("organization_members")
       .select("organization_id")
       .eq("user_id", user.userId)
+      .limit(1)
+      .maybeSingle(),
+    client
+      .from("auctions")
+      .select("id")
+      .eq("created_by", user.userId)
       .limit(1)
       .maybeSingle(),
     client
@@ -33,7 +43,7 @@ export async function postAuthDestination(user: AppUser, requested = "/") {
       .eq("id", user.userId)
       .maybeSingle(),
   ]);
-  organizer = organizer || Boolean(membership);
+  organizer = organizer || Boolean(membership) || Boolean(existingAuction);
   return roleDestination({
     target,
     organizer,

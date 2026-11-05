@@ -20,8 +20,6 @@ export function roleDestination(input: {
   if (input.platformAdmin) return target === "/" ? "/admin" : target;
   if (supporterPaths.some((path) => target.startsWith(path))) return target;
   if (input.organizer)
-    return target.startsWith("/onboarding") || target.startsWith("/admin")
-      ? target
-      : "/admin";
+    return target.startsWith("/admin") ? target : "/admin";
   return input.accountType === "organizer" ? "/onboarding" : "/account";
 }
