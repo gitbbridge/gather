@@ -65,6 +65,10 @@ import { Switch } from "@/components/ui/switch";
 import { Toaster, toast } from "sonner";
 import { NonprofitSettings } from "@/app/nonprofit-settings";
 import { AdminDashboard } from "@/components/tailwind-ui/admin-dashboard";
+import {
+  SponsorShowcase,
+  type PublicSponsorData,
+} from "@/components/sponsor-showcase";
 import type { NonprofitPublic } from "@/lib/nonprofits";
 import { createAuction, publicState, money } from "@/lib/auction";
 type State = ReturnType<typeof publicState>;
@@ -114,6 +118,7 @@ export default function AuctionApp({
     [modal, setModal] = useState(""),
     [busy, setBusy] = useState(false),
     [amount, setAmount] = useState(""),
+    [sponsorData, setSponsorData] = useState<PublicSponsorData | null>(null),
     [now, setNow] = useState(0),
     [id, setId] = useState("");
   const load = useCallback(async (auctionId?: string) => {
@@ -139,6 +144,11 @@ export default function AuctionApp({
       "";
     setId(value);
     load(value);
+    if (value)
+      fetch(`/api/sponsors/public?auction=${encodeURIComponent(value)}`)
+        .then((response) => response.json())
+        .then((result) => setSponsorData(result as PublicSponsorData))
+        .catch(() => setSponsorData(null));
     setNow(Date.now());
   }, [load, auctionId]);
   useEffect(() => {
@@ -707,6 +717,11 @@ export default function AuctionApp({
                       <p className="text-sm text-muted-foreground mt-1">
                         Donated by {item.donor}
                       </p>
+                      {!!sponsorData?.itemSponsors[item.id]?.length && (
+                        <p className="mt-2 text-xs font-semibold text-[#175b47]">
+                          Sponsored by {sponsorData.itemSponsors[item.id].map((sponsor) => sponsor.name).join(", ")}
+                        </p>
+                      )}
                       <div className="flex justify-between items-end mt-5 mb-4">
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">
@@ -1006,6 +1021,7 @@ export default function AuctionApp({
               </form>
             </>
           )}
+          <SponsorShowcase data={sponsorData} />
           <footer className="mt-10 flex flex-wrap justify-between gap-3 border-t pt-6 text-xs text-muted-foreground">
             <span>Gather · Good things happen when we give together.</span>
             <button
@@ -1063,6 +1079,11 @@ export default function AuctionApp({
             </p>
             <DialogTitle className="text-2xl">{current?.title}</DialogTitle>
             <DialogDescription>Donated by {current?.donor}</DialogDescription>
+            {current && !!sponsorData?.itemSponsors[current.id]?.length && (
+              <p className="text-sm font-semibold text-[#175b47]">
+                Sponsored by {sponsorData.itemSponsors[current.id].map((sponsor) => sponsor.name).join(", ")}
+              </p>
+            )}
           </DialogHeader>
           {current && (
             <div className="p-6 pt-2">

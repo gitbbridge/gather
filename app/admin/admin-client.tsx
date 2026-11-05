@@ -166,6 +166,11 @@ export default function AdminClient() {
           `/admin/tickets?organization=${encodeURIComponent(data.nonprofit?.id || "")}&auction=${encodeURIComponent(data.id)}`,
         )
       }
+      onSponsors={() =>
+        window.location.assign(
+          `/admin/sponsors?organization=${encodeURIComponent(data.nonprofit?.id || "")}&auction=${encodeURIComponent(data.id)}`,
+        )
+      }
       onHomepage={() =>
         window.location.assign(
           `/homepage?nonprofit=${encodeURIComponent(data.nonprofit?.id || "")}`,
