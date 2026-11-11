@@ -11,16 +11,21 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  createSupabaseBrowserClient,
+  type SupabaseBrowserConfig,
+} from "@/lib/supabase/client";
 
 export function AuthForm({
   returnTo,
   initialMode = "signin",
   initialMessage = "",
+  supabaseConfig,
 }: {
   returnTo: string;
   initialMode?: "signin" | "signup" | "forgot";
   initialMessage?: string;
+  supabaseConfig: SupabaseBrowserConfig;
 }) {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">(initialMode);
   const [busy, setBusy] = useState(false);
@@ -44,7 +49,7 @@ export function AuthForm({
     const fullName = String(form.get("fullName") || "").trim();
 
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabaseConfig);
       if (mode === "forgot") {
         const redirectTo = `${window.location.origin}/auth/callback?return_to=${encodeURIComponent("/auth/update-password")}`;
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
