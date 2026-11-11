@@ -5,12 +5,15 @@ import { productionSecurityHeaders } from "../lib/security/headers.ts";
 
 test("production responses define core browser security headers", () => {
   const headers = new Map(productionSecurityHeaders.map((entry) => [entry.key, entry.value]));
+  const middleware = readFileSync(new URL("../middleware.ts", import.meta.url), "utf8");
   assert.match(headers.get("Content-Security-Policy") || "", /frame-ancestors 'none'/);
   assert.match(headers.get("Content-Security-Policy") || "", /object-src 'none'/);
   assert.match(headers.get("Strict-Transport-Security") || "", /max-age=31536000/);
   assert.equal(headers.get("X-Content-Type-Options"), "nosniff");
   assert.equal(headers.get("X-Frame-Options"), "DENY");
   assert.match(headers.get("Permissions-Policy") || "", /camera=\(\)/);
+  assert.match(middleware, /productionSecurityHeaders/);
+  assert.match(middleware, /response\.headers\.set/);
 });
 
 test("high-risk API routes use centralized throttling", () => {
