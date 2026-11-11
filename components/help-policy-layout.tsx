@@ -65,7 +65,7 @@ export function HelpPolicyLayout({ active, title, lede, status, children }: { ac
       </div>
     </div>
 
-    <footer className="border-t border-[#dce4df] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-7 text-sm text-[#718078] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10"><span>Gather · Simple online auctions for nonprofits.</span><div className="flex flex-wrap gap-5"><a href="/help" className="hover:text-[#175b47]">Help Center</a><a href="/legal/privacy" className="hover:text-[#175b47]">Privacy</a><a href="/legal/terms" className="hover:text-[#175b47]">Terms</a><a href="/support" className="hover:text-[#175b47]">Support</a></div></div></footer>
+    <footer className="border-t border-[#dce4df] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-7 text-sm text-[#718078] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10"><span>Gather · Simple online auctions for nonprofits.</span><div className="flex flex-wrap gap-5"><a href="/about/give-holidays" className="hover:text-[#175b47]">About Give Holidays</a><a href="/help" className="hover:text-[#175b47]">Help Center</a><a href="/legal/privacy" className="hover:text-[#175b47]">Privacy</a><a href="/legal/terms" className="hover:text-[#175b47]">Terms</a><a href="/support" className="hover:text-[#175b47]">Support</a></div></div></footer>
   </main>;
 }
 
