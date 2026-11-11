@@ -1,12 +1,11 @@
 'use client';
 
 import { createBrowserClient } from '@supabase/ssr';
-import { isSupabaseConfigured, supabasePublishableKey, supabaseUrl } from './config';
+import { resolveSupabaseBrowserConfig, type SupabaseBrowserConfig } from './config';
 
-export function createSupabaseBrowserClient() {
-  if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured. Add the project publishable key to .env.local.');
-  }
+export type { SupabaseBrowserConfig } from './config';
 
-  return createBrowserClient(supabaseUrl, supabasePublishableKey);
+export function createSupabaseBrowserClient(config?: SupabaseBrowserConfig) {
+  const { url, publishableKey } = resolveSupabaseBrowserConfig(config);
+  return createBrowserClient(url, publishableKey);
 }

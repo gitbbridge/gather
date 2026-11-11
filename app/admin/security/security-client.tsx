@@ -5,12 +5,12 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, KeyRound, LoaderCircle, LockKeyhole, ShieldCheck, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient, type SupabaseBrowserConfig } from "@/lib/supabase/client";
 import { toast, Toaster } from "sonner";
 
 type Enrollment = { id: string; qr: string; secret: string };
 
-export default function SecurityClient() {
+export default function SecurityClient({ supabaseConfig }: { supabaseConfig: SupabaseBrowserConfig }) {
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
   const [aal, setAal] = useState("aal1");
@@ -19,7 +19,7 @@ export default function SecurityClient() {
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    const supabase = createSupabaseBrowserClient();
+    const supabase = createSupabaseBrowserClient(supabaseConfig);
     const [{ data: factors, error }, { data: assurance }] = await Promise.all([
       supabase.auth.mfa.listFactors(),
       supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
@@ -28,14 +28,16 @@ export default function SecurityClient() {
     setVerified((factors?.totp || []).some((factor) => factor.status === "verified"));
     setAal(assurance?.currentLevel || "aal1");
     setLoading(false);
-  }, []);
+  }, [supabaseConfig]);
 
+  // The initial security-state request intentionally hydrates this client view.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { refresh().catch((error) => { toast.error(error.message); setLoading(false); }); }, [refresh]);
 
   const beginEnrollment = async () => {
     setBusy(true);
     try {
-      const { data, error } = await createSupabaseBrowserClient().auth.mfa.enroll({ factorType: "totp", friendlyName: "Gather Authenticator" });
+      const { data, error } = await createSupabaseBrowserClient(supabaseConfig).auth.mfa.enroll({ factorType: "totp", friendlyName: "Gather Authenticator" });
       if (error) throw error;
       setEnrollment({ id: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
     } catch (error) { toast.error(error instanceof Error ? error.message : "Unable to start MFA enrollment."); }
@@ -46,7 +48,7 @@ export default function SecurityClient() {
     if (!enrollment || !/^\d{6}$/.test(code)) return;
     setBusy(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createSupabaseBrowserClient(supabaseConfig);
       const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: enrollment.id });
       if (challengeError) throw challengeError;
       const { error } = await supabase.auth.mfa.verify({ factorId: enrollment.id, challengeId: challenge.id, code });

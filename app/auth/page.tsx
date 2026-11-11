@@ -2,7 +2,11 @@ import { Leaf } from "lucide-react";
 import { redirect } from "next/navigation";
 import { AuthForm } from "./auth-form";
 import { getAppUser, safeReturnPath } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import {
+  isSupabaseConfigured,
+  supabasePublishableKey,
+  supabaseUrl,
+} from "@/lib/supabase/config";
 import { postAuthDestination } from "@/lib/auth-destination";
 import Link from "next/link";
 
@@ -42,6 +46,10 @@ export default async function AuthPage({
           {isSupabaseConfigured ? (
             <AuthForm
               returnTo={returnTo}
+              supabaseConfig={{
+                url: supabaseUrl,
+                publishableKey: supabasePublishableKey,
+              }}
               initialMode={
                 mode === "forgot"
                   ? "forgot"
