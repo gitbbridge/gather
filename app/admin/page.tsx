@@ -20,6 +20,12 @@ export default async function AdminPage() {
             gather<span className="text-[#78a68b]">.</span>
           </a>
           <div className="flex items-center gap-4">
+            <a
+              href="/admin/security"
+              className="min-h-11 content-center text-sm font-medium text-[#175b47] hover:underline"
+            >
+              Security
+            </a>
             {isPlatformAdmin(user) && (
               <a
                 href="/admin/email-templates"

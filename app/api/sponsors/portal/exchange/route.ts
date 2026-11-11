@@ -2,14 +2,17 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { hashPortalToken, randomPortalToken } from "@/lib/sponsors";
+import { rateLimitResponse, trustedMutationOrigin } from "@/lib/security/rate-limit";
 
 export const dynamic = "force-dynamic";
 const input = z.object({ token: z.string().regex(/^[a-f0-9]{64}$/) });
 
 export async function POST(request: Request) {
   try {
-    if (request.headers.get("origin") !== new URL(request.url).origin)
+    if (!trustedMutationOrigin(request))
       return Response.json({ error: "Invalid request origin." }, { status: 403 });
+    const limited = await rateLimitResponse(request, { bucket: "sponsor-token-exchange", limit: 8, windowSeconds: 300 });
+    if (limited) return limited;
     const parsed = input.safeParse(await request.json());
     if (!parsed.success)
       return Response.json({ error: "This invitation link is invalid." }, { status: 400 });

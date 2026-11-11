@@ -4,6 +4,7 @@ import { sendTemplateEmail } from "@/lib/email/resend";
 import { database } from "@/lib/nonprofits";
 import { managedAuction, managedOrganization } from "@/lib/organizer-access";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { rateLimitResponse, trustedMutationOrigin } from "@/lib/security/rate-limit";
 
 const settings = z.object({
   organizationId: z.string().uuid(),
@@ -80,14 +81,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (
-    request.headers.get("origin") &&
-    request.headers.get("origin") !== new URL(request.url).origin
-  )
+  if (!trustedMutationOrigin(request))
     return Response.json({ error: "Invalid origin." }, { status: 403 });
   const user = await getAppUser();
   if (!user)
     return Response.json({ error: "Sign in to continue." }, { status: 401 });
+  const limited = await rateLimitResponse(request, { bucket: "email-settings", limit: 12, windowSeconds: 60, identity: user.userId });
+  if (limited) return limited;
   const parsed = settings.safeParse(await request.json());
   if (!parsed.success)
     return Response.json(

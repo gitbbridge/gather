@@ -87,3 +87,10 @@ export const auditEvents = sqliteTable('audit_events', {
   index('idx_audit_events_record').on(t.recordType, t.recordId, t.createdAt),
   index('idx_audit_events_correlation').on(t.correlationId),
 ]);
+
+export const securityRateLimits = sqliteTable('security_rate_limits', {
+  key: text('key').primaryKey(),
+  requestCount: integer('request_count').notNull(),
+  resetAt: integer('reset_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, t => [index('idx_security_rate_limits_reset').on(t.resetAt)]);

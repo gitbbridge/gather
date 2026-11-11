@@ -18,6 +18,7 @@ import {
 } from "@/lib/email/notifications";
 import { recordSupporterActivity } from "@/lib/supabase/supporters";
 import { canCreateOrganization } from "@/lib/auth-destination";
+import { rateLimitResponse, trustedMutationOrigin } from "@/lib/security/rate-limit";
 export const dynamic = "force-dynamic";
 const starterItem = z.object({
   title: z.string().trim().min(1).max(100),
@@ -266,11 +267,12 @@ export async function GET(req: Request) {
 }
 export async function POST(req: Request) {
   try {
-    const origin = req.headers.get("origin");
-    if (!origin || origin !== new URL(req.url).origin)
+    if (!trustedMutationOrigin(req))
       return json({ error: "Invalid request origin." }, 403);
     const user = await getAppUser();
     if (!user) return json({ error: "Sign in to continue." }, 401);
+    const limited = await rateLimitResponse(req, { bucket: "auction-mutation", limit: 60, windowSeconds: 60, identity: user.userId });
+    if (limited) return limited;
     if (Number(req.headers.get("content-length") || 0) > 16000)
       return json({ error: "Request too large." }, 413);
     const raw = await req.text();

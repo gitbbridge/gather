@@ -1,7 +1,6 @@
-import { getAppUser } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/resend';
 import { emailTemplates, previewTemplate } from '@/lib/email/templates';
-import { isPlatformAdmin } from '@/lib/platform-admin';
+import { platformSecurityAccess, privilegedAccessError } from '@/lib/security/privileged-access';
 
 export const runtime = 'edge';
 
@@ -12,8 +11,9 @@ function json(body: unknown, status = 200) {
 export async function POST(request: Request) {
   try {
     if (request.headers.get('origin') !== new URL(request.url).origin) return json({ error: 'Invalid request origin.' }, 403);
-    const user = await getAppUser();
-    if (!isPlatformAdmin(user) || !user?.email) return json({ error: 'Platform administrator access required.' }, 403);
+    const access = await platformSecurityAccess();
+    if (!access.allowed || !access.user?.email) return privilegedAccessError();
+    const user = access.user;
     if (Number(request.headers.get('content-length') || 0) > 2_000) return json({ error: 'Request too large.' }, 413);
 
     const body = await request.json().catch(() => ({})) as { templateId?: unknown };

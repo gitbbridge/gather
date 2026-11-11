@@ -3,6 +3,7 @@ import { getAppUser } from '@/lib/auth';
 import { paymentAccount } from '@/lib/payments';
 import { stripe } from '@/lib/stripe';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { rateLimitResponse, trustedMutationOrigin } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,10 +12,11 @@ const json = (body: unknown, status = 200) => Response.json(body, { status, head
 
 export async function POST(request: Request) {
   try {
-    const origin = new URL(request.url).origin;
-    if (request.headers.get('origin') !== origin) return json({ error: 'Invalid request origin.' }, 403);
+    if (!trustedMutationOrigin(request)) return json({ error: 'Invalid request origin.' }, 403);
     const user = await getAppUser();
     if (!user) return json({ error: 'Sign in to pay your invoice.' }, 401);
+    const limited = await rateLimitResponse(request, { bucket: 'invoice-checkout', limit: 8, windowSeconds: 60, identity: user.userId });
+    if (limited) return limited;
     const parsed = input.safeParse(await request.json());
     if (!parsed.success) return json({ error: 'Choose an invoice and try again.' }, 400);
     const client = createSupabaseAdminClient();

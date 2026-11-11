@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { getAppUser } from "@/lib/auth";
-import { isPlatformAdmin } from "@/lib/platform-admin";
+import { platformSecurityAccess } from "@/lib/security/privileged-access";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { recordSupporterActivity } from "@/lib/supabase/supporters";
 const schema = z.object({
@@ -23,7 +22,7 @@ const schema = z.object({
   nextFollowUpAt: z.string().datetime().nullable().optional(),
 });
 async function allowed() {
-  return isPlatformAdmin(await getAppUser());
+  return (await platformSecurityAccess()).allowed;
 }
 export async function GET() {
   if (!(await allowed()))
