@@ -37,7 +37,7 @@ export function LandingPage() {
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#536b60] md:flex" aria-label="Main navigation">
             <a className="hover:text-[#175b47]" href="#how-it-works">How it works</a>
             <a className="hover:text-[#175b47]" href="#built-for-auctions">Features</a>
-            <a className="hover:text-[#175b47]" href="#travel">Travel experiences</a>
+            <a className="hover:text-[#175b47]" href="/about/give-holidays">Travel experiences</a>
             <a className="hover:text-[#175b47]" href="#pricing">Pricing</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
