@@ -3,6 +3,7 @@ import { getAppUser } from "@/lib/auth";
 import { paymentAccount } from "@/lib/payments";
 import { stripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { rateLimitResponse, trustedMutationOrigin } from "@/lib/security/rate-limit";
 
 const schema = z.object({
   auctionId: z.string().uuid(),
@@ -25,11 +26,10 @@ export async function POST(request: Request) {
   let orderId: string | null = null;
   const client = createSupabaseAdminClient();
   try {
-    if (
-      request.headers.get("origin") &&
-      request.headers.get("origin") !== new URL(request.url).origin
-    )
+    if (!trustedMutationOrigin(request))
       return Response.json({ error: "Invalid origin." }, { status: 403 });
+    const limited = await rateLimitResponse(request, { bucket: "ticket-checkout", limit: 10, windowSeconds: 60 });
+    if (limited) return limited;
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success)
       return Response.json(

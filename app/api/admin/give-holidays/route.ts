@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { getAppUser } from "@/lib/auth";
-import { isPlatformAdmin } from "@/lib/platform-admin";
+import { platformSecurityAccess } from "@/lib/security/privileged-access";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -118,8 +117,8 @@ function publicPackage(row: Record<string, unknown>) {
 }
 
 async function requirePlatformAdmin() {
-  const user = await getAppUser();
-  return isPlatformAdmin(user) ? user : null;
+  const access = await platformSecurityAccess();
+  return access.allowed ? access.user : null;
 }
 
 export async function GET() {

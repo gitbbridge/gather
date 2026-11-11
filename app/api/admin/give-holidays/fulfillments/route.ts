@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { getAppUser } from '@/lib/auth';
-import { isPlatformAdmin } from '@/lib/platform-admin';
+import { platformSecurityAccess } from '@/lib/security/privileged-access';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { safelySendTrackedTemplateEmail } from '@/lib/email/notifications';
 import { recordSupporterActivity, supporterIdentity } from '@/lib/supabase/supporters';
@@ -8,7 +7,7 @@ import { recordSupporterActivity, supporterIdentity } from '@/lib/supabase/suppo
 export const dynamic = 'force-dynamic';
 const update = z.object({ id: z.string().uuid(), status: z.enum(['paid_details_needed','traveler_details_submitted','dates_requested','booking_in_progress','confirmed','fulfilled','cancelled','refunded']), providerReference: z.string().trim().max(200).optional() });
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
-async function allowed() { return isPlatformAdmin(await getAppUser()); }
+async function allowed() { return (await platformSecurityAccess()).allowed; }
 
 export async function GET() {
   try {
