@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { assertSafeSandboxEnvironment, isSandboxEnvironment } from '@/lib/staging';
 
 let stripeClient: Stripe | null = null;
 
@@ -11,6 +12,10 @@ function requiredSecret(name: 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET') {
 }
 
 export function stripe() {
+  assertSafeSandboxEnvironment();
+  if (isSandboxEnvironment() && !requiredSecret('STRIPE_SECRET_KEY').startsWith('sk_test_')) {
+    throw new Error('The Gather sandbox refuses live Stripe credentials.');
+  }
   if (!stripeClient) {
     stripeClient = new Stripe(requiredSecret('STRIPE_SECRET_KEY'), {
       httpClient: Stripe.createFetchHttpClient(),

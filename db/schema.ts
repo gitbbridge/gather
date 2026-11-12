@@ -94,3 +94,25 @@ export const securityRateLimits = sqliteTable('security_rate_limits', {
   resetAt: integer('reset_at').notNull(),
   updatedAt: integer('updated_at').notNull(),
 }, t => [index('idx_security_rate_limits_reset').on(t.resetAt)]);
+
+export const sandboxIssues = sqliteTable('sandbox_issues', {
+  id: text('id').primaryKey(),
+  fingerprint: text('fingerprint').notNull().unique(),
+  createdBy: text('created_by').notNull(),
+  title: text('title').notNull(),
+  userRole: text('user_role').notNull(),
+  workflowArea: text('workflow_area').notNull(),
+  issueType: text('issue_type').notNull(),
+  priority: text('priority').notNull(),
+  description: text('description').notNull(),
+  expectedBehavior: text('expected_behavior').notNull(),
+  actualBehavior: text('actual_behavior').notNull(),
+  pageUrl: text('page_url').notNull(),
+  status: text('status').notNull().default('Open'),
+  createdAt: integer('created_at').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+}, t => [
+  index('idx_sandbox_issues_status_time').on(t.status, t.createdAt),
+  index('idx_sandbox_issues_role').on(t.userRole),
+  index('idx_sandbox_issues_priority').on(t.priority),
+]);

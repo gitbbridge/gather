@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import type Stripe from 'stripe';
 import { verifiedStripeEvent } from '@/lib/stripe';
 import { processStripeEvent } from '@/lib/supabase/stripe-events';
+import { assertSafeSandboxEnvironment, isSandboxEnvironment } from '@/lib/staging';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ function objectId(event: Stripe.Event) {
 }
 
 export async function POST(request: Request) {
+  assertSafeSandboxEnvironment();
   const signature = request.headers.get('stripe-signature');
   if (!signature) return json({ error: 'Missing Stripe signature.' }, 400);
   if (Number(request.headers.get('content-length') || 0) > 1_000_000) {
@@ -31,6 +33,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.warn('Rejected Stripe webhook:', error instanceof Error ? error.message : 'Invalid event');
     return json({ error: 'Invalid Stripe signature.' }, 400);
+  }
+
+  if (isSandboxEnvironment() && event.livemode) {
+    console.warn('Rejected live-mode Stripe event in the Gather sandbox.');
+    return json({ error: 'Live Stripe events are disabled in test mode.' }, 403);
   }
 
   try {

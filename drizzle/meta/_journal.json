@@ -50,6 +50,13 @@
       "when": 1793882183822,
       "tag": "0006_closed_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794394966659,
+      "tag": "0007_gifted_greymalkin",
+      "breakpoints": true
     }
   ]
 }

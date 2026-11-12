@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+import { SandboxIndicator } from "@/components/sandbox-indicator";
+import {
+  assertSafeSandboxEnvironment,
+  isSandboxEnvironment,
+} from "@/lib/staging";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,9 +20,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const sandbox = isSandboxEnvironment();
+  if (sandbox) assertSafeSandboxEnvironment();
+
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {sandbox && <SandboxIndicator />}
+        {children}
+      </body>
     </html>
   );
 }

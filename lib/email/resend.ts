@@ -1,4 +1,5 @@
 import { renderEmailTemplate } from './templates.ts';
+import { isSandboxEnvironment, sandboxEmailSink } from '../staging.ts';
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 export const DEFAULT_FROM_EMAIL = 'Gather for Good <noreply@gatherforgood.bid>';
@@ -33,8 +34,9 @@ function recipients(value: string | string[]) {
 }
 
 export async function sendEmail(input: SendEmailInput) {
-  const to = recipients(input.to);
-  const configuredBcc = process.env.RESEND_BCC_EMAIL?.trim();
+  const sandboxSink = sandboxEmailSink();
+  const to = sandboxSink ? recipients(sandboxSink) : recipients(input.to);
+  const configuredBcc = sandboxSink ? '' : process.env.RESEND_BCC_EMAIL?.trim();
   const bcc = configuredBcc
     ? recipients(configuredBcc).filter(
         address => !to.some(primary => primary.toLowerCase() === address.toLowerCase()),
@@ -52,7 +54,7 @@ export async function sendEmail(input: SendEmailInput) {
       from: process.env.RESEND_FROM_EMAIL?.trim() || DEFAULT_FROM_EMAIL,
       to,
       ...(bcc.length ? { bcc } : {}),
-      subject: input.subject.replace(/[\r\n]+/g, ' ').trim(),
+      subject: `${isSandboxEnvironment() ? '[GATHER TEST] ' : ''}${input.subject.replace(/[\r\n]+/g, ' ').trim()}`,
       html: input.html,
       ...(input.replyTo ? { reply_to: input.replyTo } : {}),
     }),
