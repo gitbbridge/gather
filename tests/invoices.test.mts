@@ -25,3 +25,20 @@ test('invoice generation refuses an auction that is still open', () => {
   const auction = createAuction('Auction', 'Nonprofit', { starts: 1, ends: 100 });
   assert.throws(() => buildWinnerInvoiceDrafts(auction, {}, 50), /after every auction item closes/);
 });
+
+test('the $100 cap is applied to each item, not the combined invoice', () => {
+  const items = Array.from({ length: 2 }, (_, index) => ({
+    title: `Premium item ${index + 1}`,
+    value: 500_000,
+  }));
+  const auction = createAuction('Auction', 'Nonprofit', { starts: 1, ends: 2, organizerPercent: 0, items });
+  for (const item of auction.items) {
+    item.leader = 'winner';
+    item.price = 500_000;
+    item.bids = [{ user: 'winner', max: 500_000, at: 1 }];
+  }
+  const [invoice] = buildWinnerInvoiceDrafts(auction, {}, 3);
+  assert.equal(invoice.hammerSubtotalCents, 1_000_000);
+  assert.equal(invoice.bidderPlatformFeeCents, 20_000);
+  assert.equal(invoice.totalDueCents, 1_020_000);
+});

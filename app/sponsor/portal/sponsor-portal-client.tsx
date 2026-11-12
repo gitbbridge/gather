@@ -139,7 +139,7 @@ export default function SponsorPortalClient() {
               <h2 className="text-lg font-semibold">1. Choose Your Fee Coverage</h2>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {([
-                  ["platform", "Gather Platform Fees", "Help cover the existing 5% platform fee on eligible winning auction bids."],
+                  ["platform", "Gather Platform Fees", "Help cover Gather’s 5% platform fee, capped at $100 per eligible winning item."],
                   ["processing", "Payment Processing Fees", "Help reimburse actual eligible Stripe processing expenses."],
                   ["both", "Both Fee Categories", "Support both eligible platform and payment-processing expenses."],
                 ] as const).map(([key, label, description]) => (
