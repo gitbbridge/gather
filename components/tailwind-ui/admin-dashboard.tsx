@@ -413,7 +413,7 @@ export function AdminDashboard({
                 <ArrowUpRight size={15} />
               </Button>
               <p className="mt-3 text-xs text-muted-foreground">
-                Gather’s 5% fee is separate from Stripe processing fees.
+                Gather’s 5% platform fee is capped at $100 per item and remains separate from Stripe processing fees.
               </p>
             </div>
           </div>

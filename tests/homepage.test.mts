@@ -50,6 +50,6 @@ test('Gather homepage states the focused auction and risk-free travel position',
   assert.match(landing, /A calm workspace for organizers\. A clear experience for bidders\./);
   assert.match(landing, /fulfillment obligation only after the auction closes and the winning bidder pays/);
   assert.match(landing, /the nonprofit does not owe the travel cost/);
-  assert.match(landing, /Payment-processing fees are disclosed as their own line/);
+  assert.match(landing, /Payment processing \(2\.9% \+ \$0\.30\) is disclosed separately/);
   assert.doesNotMatch(landing, /destination placeholders/);
 });

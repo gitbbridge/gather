@@ -15,6 +15,6 @@ test('all approved event formats are selectable and live publishing is clearly s
 });
 
 test('approved auction fee language remains separate from processing fees', () => {
-  assert.match(source, /5% platform commission/);
-  assert.match(source, /Payment processing fees are shown separately/);
+  assert.match(source, /5% platform fee on eligible winning bids, capped at \$100 per item/);
+  assert.match(source, /Payment processing \(2\.9% \+ \$0\.30\) is shown separately/);
 });

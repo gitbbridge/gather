@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       metadata: { gather_invoice_id: invoice.id, gather_auction_id: invoice.auction_id, gather_payer_id: user.userId },
       success_url: `${origin}/my-wins?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/my-wins?payment=cancelled`,
-      custom_text: { submit: { message: 'Stripe processing fees are deducted separately from nonprofit proceeds and are not part of Gather’s 5% platform fee.' } },
+      custom_text: { submit: { message: 'Stripe processing fees are deducted separately from nonprofit proceeds and are not part of Gather’s 5% platform fee, capped at $100 per item.' } },
     }, {
       stripeAccount: connected.stripeAccountId,
       idempotencyKey: `gather-invoice-${invoice.id}-${Math.floor(Date.now() / 3_600_000)}`,
