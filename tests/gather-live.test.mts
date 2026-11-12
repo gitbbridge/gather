@@ -30,7 +30,7 @@ test("pledged and collected remain separate totals", () => {
 
 test("migration keeps donations fee-free and bid recording idempotent", () => {
   const source = readFileSync(new URL("../supabase/migrations/202611050008_gather_live.sql", import.meta.url), "utf8");
-  assert.match(source, /'fund_pledge'.*p_amount_cents,0\)/s);
+  assert.match(source, /'fund_pledge'[\s\S]*p_amount_cents,0\)/);
   assert.match(source, /unique \(auction_id,request_id\)/);
   assert.match(source, /for update/);
   assert.match(source, /revoke all on function public\.record_live_bid/);

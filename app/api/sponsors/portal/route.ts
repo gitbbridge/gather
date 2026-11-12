@@ -167,7 +167,6 @@ export async function POST(request: Request) {
       const checkout = await stripe().checkout.sessions.create({
         mode: "setup",
         customer: customerId,
-        payment_method_types: ["card"],
         setup_intent_data: { metadata: { gather_sponsor_agreement_id: agreement.id, gather_auction_id: agreement.auction_id } },
         metadata: { gather_sponsor_agreement_id: agreement.id, gather_auction_id: agreement.auction_id },
         success_url: `${origin}/sponsor/portal?setup=success&session_id={CHECKOUT_SESSION_ID}`,

@@ -118,10 +118,12 @@ export async function POST(request: Request) {
       const outcome = String(body.outcome); if (!["sold", "passed"].includes(outcome)) return json({ error: "Choose Sold or Passed." }, 400);
       const { data: lot, error } = await client.rpc("finalize_live_lot", { p_lot_id: body.lotId, p_outcome: outcome, p_request_id: body.requestId || id(), p_actor_id: access.user.userId, p_reason: String(body.reason || "") || null }).single();
       if (error) throw error;
-      const item = access.auction.items.find((entry) => entry.id === lot.auction_item_id);
+      const finalizedLot = lot as { auction_item_id?: unknown; current_bid_cents?: unknown; winning_paddle_id?: unknown } | null;
+      if (!finalizedLot || typeof finalizedLot.auction_item_id !== "string") throw new Error("The finalized live lot response was invalid.");
+      const item = access.auction.items.find((entry) => entry.id === finalizedLot.auction_item_id);
       if (item) {
-        item.ends = Date.now(); item.sold = outcome === "sold"; item.price = Number(lot.current_bid_cents || item.price);
-        if (outcome === "sold") { const { data: paddle } = await client.from("event_paddles").select("user_id").eq("id", lot.winning_paddle_id).single(); item.leader = paddle?.user_id || ""; }
+        item.ends = Date.now(); item.sold = outcome === "sold"; item.price = Number(finalizedLot.current_bid_cents || item.price);
+        if (outcome === "sold") { const { data: paddle } = await client.from("event_paddles").select("user_id").eq("id", String(finalizedLot.winning_paddle_id || "")).single(); item.leader = paddle?.user_id || ""; }
         await database().prepare("UPDATE auctions SET state=?,updated_at=? WHERE id=?").bind(JSON.stringify(access.auction), Date.now(), auctionId).run();
       }
       await audit(String(body.reason || ""), { lotId: body.lotId, outcome });

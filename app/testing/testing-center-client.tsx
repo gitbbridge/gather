@@ -43,6 +43,10 @@ type Issue = {
   createdAt: number;
 };
 
+type IssueForm = Pick<Issue, "userRole" | "workflowArea" | "issueType" | "priority" | "description" | "expectedBehavior" | "actualBehavior" | "pageUrl"> & {
+  title: string;
+};
+
 type Workflow = { label: string; href?: string; note?: string };
 type RoleSection = {
   role: Role;
@@ -110,7 +114,7 @@ const sections: RoleSection[] = [
   },
 ];
 
-const blankForm = {
+const blankForm: IssueForm = {
   title: "",
   userRole: roles[0] as Role,
   workflowArea: "Onboarding",
@@ -140,8 +144,11 @@ export default function TestingCenterClient() {
     const query = new URLSearchParams(Object.entries({ status: statusFilter, priority: priorityFilter, role: roleFilter }).filter(([, value]) => value));
     const controller = new AbortController();
     fetch(`/api/testing/issues?${query}`, { cache: "no-store", signal: controller.signal })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Unable to load issues.")))
-      .then((data: { issues: Issue[] }) => setIssues(data.issues))
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load issues.");
+        return await response.json() as { issues: Issue[] };
+      })
+      .then((data) => setIssues(data.issues))
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError"))
           console.error(error);
