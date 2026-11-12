@@ -384,12 +384,12 @@ export default function AuctionApp({
           )}
           <p className="eyebrow px-3 mb-3">THE AUCTION</p>
           <SidebarMenu>
-            {[
+            {([
               ["Explore auction", LayoutGrid],
               ["My bids", Gavel],
               ["Watchlist", Heart],
               ["Notifications", Bell],
-            ].map(([name, Icon]: any) => (
+            ] as const).map(([name, Icon]) => (
               <SidebarMenuItem key={name}>
                 <SidebarMenuButton
                   onClick={() => setView(name)}
@@ -409,12 +409,12 @@ export default function AuctionApp({
             <>
               <p className="eyebrow px-3 mt-9 mb-3">ORGANIZER</p>
               <SidebarMenu>
-                {[
+                {([
                   ["Overview", ChartNoAxesCombined],
                   ["Manage items", Package],
                   ["Nonprofit page", Leaf],
                   ["Settings", Settings],
-                ].map(([name, Icon]: any) => (
+                ] as const).map(([name, Icon]) => (
                   <SidebarMenuItem key={name}>
                     <SidebarMenuButton
                       onClick={() => setView(name)}
@@ -1036,11 +1036,11 @@ export default function AuctionApp({
           aria-label="Auction navigation"
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-white/95 px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(23,76,59,.08)] backdrop-blur md:hidden"
         >
-          {[
+          {([
             ["Explore auction", LayoutGrid, "Explore"],
             ["My bids", Gavel, "My bids"],
             ["Watchlist", Heart, "Saved"],
-          ].map(([name, Icon, label]: any) => (
+          ] as const).map(([name, Icon, label]) => (
             <button
               key={name}
               onClick={() => setView(name)}

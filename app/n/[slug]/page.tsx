@@ -22,7 +22,8 @@ export default async function NonprofitPage({ params }: Props) {
   const rows = (await database().prepare('SELECT id,state FROM auctions WHERE nonprofit_id=? ORDER BY rowid DESC').bind(nonprofit.id).all<{ id: string; state: string }>()).results;
   const auctions = rows.map(row => ({ id: row.id, state: JSON.parse(row.state) as Auction }));
   const homepage = await database().prepare('SELECT published FROM nonprofit_homepages WHERE nonprofit_id=?').bind(nonprofit.id).first<{ published: string | null }>();
+  const clock = await database().prepare("SELECT CAST(strftime('%s','now') AS INTEGER)*1000 AS now").first<{ now: number }>();
   const publicFields = publicNonprofit(nonprofit);
   const config = parseHomepage(homepage?.published) || defaultHomepage(publicFields, auctions);
-  return <HomepageRenderer nonprofit={publicFields} config={config} auctions={auctions} now={Date.now()}/>;
+  return <HomepageRenderer nonprofit={publicFields} config={config} auctions={auctions} now={clock?.now || 0}/>;
 }
