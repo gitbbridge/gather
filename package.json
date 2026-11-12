@@ -11,6 +11,8 @@
     "build": "node scripts/run-framework.mjs build",
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "production:validate": "node scripts/validate-production-config.mjs",
+    "production:validate:launch": "node scripts/validate-production-config.mjs --launch",
     "db:generate": "drizzle-kit generate",
     "staging:validate": "node scripts/validate-staging-config.mjs",
     "test:integration:staging": "node --env-file=.env.staging.local tests/nonprofits.integration.mjs && node --env-file=.env.staging.local tests/homepage.integration.mjs && node --env-file=.env.staging.local tests/closeout.integration.mjs",
