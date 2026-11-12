@@ -13,6 +13,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "staging:validate": "node scripts/validate-staging-config.mjs",
+    "test:integration:staging": "node --env-file=.env.staging.local tests/nonprofits.integration.mjs && node --env-file=.env.staging.local tests/homepage.integration.mjs && node --env-file=.env.staging.local tests/closeout.integration.mjs",
     "email:sync:supabase": "node --env-file=.env --env-file=.env.local --experimental-strip-types scripts/sync-supabase-email-templates.mjs"
   },
   "dependencies": {

@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-const origin = 'http://localhost:5173';
-const signed = await fetch(origin + '/signin-with-chatgpt?return_to=/', { redirect: 'manual' });
-const cookie = signed.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+import { integrationOrigin as origin, stagingSession } from './helpers/staging-session.mjs';
+const cookie = await stagingSession(process.env.STAGING_ORGANIZER_EMAIL || 'nonprofit@givholidays.com');
 async function post(path, body) { const response = await fetch(origin + path, { method: 'POST', headers: { origin, cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return { status: response.status, data: await response.json() }; }
 
 const created = await post('/api/auction', { action: 'create', key: crypto.randomUUID(), name: 'Homepage verification auction', organization: 'Homepage Verification Fund' });
