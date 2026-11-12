@@ -10,10 +10,12 @@ import {
   ExternalLink,
   Gavel,
   HeartHandshake,
+  LayoutGrid,
   Plane,
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { sandboxPageGroups } from "@/lib/sandbox-page-directory";
 
 const roles = [
   "Nonprofit Organizer",
@@ -221,6 +223,40 @@ export default function TestingCenterClient() {
             );
           })}
         </div>
+      </section>
+
+      <section id="page-directory" className="scroll-mt-16 rounded-3xl border border-[#dce5df] bg-white p-6 shadow-sm sm:p-9">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-[#e4f0e9] p-2.5 text-[#175b47]">
+            <LayoutGrid className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#56806d]">URL cheat sheet</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#173d31]">Gather page directory</h2>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-[#66786f]">Open every major sandbox area from one place. Pages still enforce the permissions of the account currently signed in.</p>
+          </div>
+        </div>
+        <div className="mt-7 grid gap-5 lg:grid-cols-2">
+          {sandboxPageGroups.map((group) => (
+            <article key={group.title} className="rounded-2xl border border-[#dce5df] bg-[#fbfcfb] p-5">
+              <h3 className="font-semibold text-[#173d31]">{group.title}</h3>
+              <p className="mt-1 text-sm leading-5 text-[#66786f]">{group.description}</p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {group.links.map((link) => (
+                  <a key={`${link.label}-${link.href}`} href={link.href} className="group rounded-xl border border-[#e0e8e3] bg-white px-3 py-3 text-sm transition hover:border-[#9db9aa] hover:shadow-sm">
+                    <span className="flex items-center justify-between gap-2 font-semibold text-[#244c3e]">
+                      {link.label}
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[#6f8a7c] transition group-hover:text-[#175b47]" />
+                    </span>
+                    <code className="mt-1 block truncate text-[10px] text-[#718078]">{link.href}</code>
+                    {link.note ? <span className="mt-1 block text-[11px] leading-4 text-amber-800">{link.note}</span> : null}
+                  </a>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+        <p className="mt-5 rounded-xl bg-[#edf5f0] px-4 py-3 text-xs leading-5 text-[#315a49]">This directory is maintained in one sandbox route registry. Add or remove entries there whenever a feature is introduced, renamed, or retired.</p>
       </section>
 
       <section id="report-issue" className="scroll-mt-16 rounded-3xl border border-[#dce5df] bg-white p-6 shadow-sm sm:p-9">

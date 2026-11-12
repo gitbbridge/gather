@@ -9,6 +9,8 @@ import {
 } from "@/lib/supabase/config";
 import { postAuthDestination } from "@/lib/auth-destination";
 import Link from "next/link";
+import { isSandboxEnvironment } from "@/lib/staging";
+import { SandboxDemoAccounts } from "./sandbox-demo-accounts";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Sign in | Gather" };
@@ -22,6 +24,9 @@ export default async function AuthPage({
   const returnTo = safeReturnPath(requestedReturn);
   const existingUser = await getAppUser();
   if (existingUser) redirect(await postAuthDestination(existingUser, returnTo));
+  const demoPassword = isSandboxEnvironment()
+    ? process.env.SANDBOX_DEMO_PASSWORD?.trim()
+    : "";
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#f4f7f5] px-5 py-10">
@@ -80,6 +85,9 @@ export default async function AuthPage({
             </div>
           )}
         </section>
+        {demoPassword ? (
+          <SandboxDemoAccounts password={demoPassword} />
+        ) : null}
       </div>
     </main>
   );
