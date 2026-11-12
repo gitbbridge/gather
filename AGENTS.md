@@ -36,8 +36,13 @@ These instructions apply to all work in this repository and must be followed for
   1. Confirm the source directory is `C:\Users\inboxblake\development\CAL\gather-work`.
   2. Identify and report the exact Git commit proposed for deployment.
   3. Confirm the approved marketing homepage and About Give Holidays page are present.
-  4. Run the production build and all relevant tests.
-  5. Identify and report every failure, including failures known to be pre-existing.
+  4. Run one production build when required for deployment. Use risk-based verification:
+     - **Cosmetic, copy, navigation, and styling changes:** No automated tests required. Verify only the changed element and perform a basic live-page check after deployment.
+     - **Localized functional changes:** Run only directly affected tests.
+     - **Payments, authentication, bidding, databases, security, and fulfillment:** Run relevant targeted tests and essential integration checks.
+     - **Major releases:** Run comprehensive regression tests when warranted by the changes.
+     - Never rerun previously successful checks unless the code or environment has materially changed.
+  5. Report failures from checks actually performed. Do not run additional tests solely to discover pre-existing failures unrelated to the requested change.
   6. Verify that only intended changes are included in the proposed deployment.
   7. Obtain the user's explicit authorization to deploy.
 - Every deployment must identify its source commit.
