@@ -6,5 +6,5 @@ export const dynamic = "force-dynamic";
 export default async function OnboardingPage() {
   const user = await requireAppUser("/onboarding");
   if (!(await canCreateOrganization(user))) redirect("/account");
-  return <OnboardingClient />;
+  return <OnboardingClient authenticatedEmail={user.email} />;
 }

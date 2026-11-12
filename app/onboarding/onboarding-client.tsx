@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Building2, CalendarDays, Check, CheckCircle2, CircleHelp, Globe2, Leaf, MapPin, Plane, Plus, Radio, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { withAuthenticatedEmail } from '@/lib/onboarding-draft';
+import Link from 'next/link';
 
 const steps = ['Organization', 'Event Details', 'Add Items', 'Payment & Fees', 'Review & Launch'];
 const storageKey = 'gather-onboarding-draft-v1';
@@ -32,21 +34,24 @@ const emptyDraft: Draft = {
   items: [], commissionPayer: 'organizer', organizerShare: '50',
 };
 
-export default function OnboardingClient() {
+export default function OnboardingClient({ authenticatedEmail }: { authenticatedEmail: string }) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [draft, setDraft] = useState<Draft>(() => withAuthenticatedEmail(emptyDraft, authenticatedEmail));
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [auctionId, setAuctionId] = useState('');
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(storageKey);
-      if (saved) setDraft({ ...emptyDraft, ...JSON.parse(saved) });
-    } catch { /* A local draft is optional until Supabase is connected. */ }
-    setHydrated(true);
-  }, []);
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = window.localStorage.getItem(storageKey);
+        if (saved) setDraft(withAuthenticatedEmail({ ...emptyDraft, ...JSON.parse(saved) }, authenticatedEmail));
+      } catch { /* A local draft is optional until Supabase is connected. */ }
+      setHydrated(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [authenticatedEmail]);
   useEffect(() => {
     if (!hydrated || auctionId) return;
     try { window.localStorage.setItem(storageKey, JSON.stringify(draft)); } catch { /* Keep setup usable if local storage is unavailable. */ }
@@ -55,7 +60,7 @@ export default function OnboardingClient() {
   const update = (changes: Partial<Draft>) => setDraft(current => ({ ...current, ...changes }));
   const next = () => {
     setError('');
-    if (step === 0 && (!draft.organization.trim() || !draft.contactName.trim() || !draft.email.trim())) return setError('Add your organization, contact name, and email to continue.');
+    if (step === 0 && (!draft.organization.trim() || !draft.contactName.trim())) return setError('Add your organization and name to continue.');
     if (step === 1 && !draft.auctionName.trim()) return setError('Give your event a name to continue.');
     if (step === 1 && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pageSlug(draft))) return setError('Choose a shareable auction link using letters, numbers, and single hyphens.');
     if (step === 1 && draft.eventType !== 'online_silent' && (!draft.venueName.trim() || !draft.eventDate)) return setError('Add the venue and event date to continue.');
@@ -92,7 +97,7 @@ export default function OnboardingClient() {
   const bidderShare = draft.commissionPayer === 'organizer' ? 0 : draft.commissionPayer === 'bidder' ? 100 : 100 - organizationShare;
 
   return <main className="min-h-screen bg-[#f8faf9] px-4 py-5 pb-16 sm:px-5 md:py-12"><div className="mx-auto max-w-3xl">
-    <header className="mb-8 flex items-center justify-between gap-4 sm:mb-12"><a href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#175b47]"><span className="grid size-9 place-items-center rounded-full bg-[#175b47] text-white"><Leaf size={21}/></span>gather<span className="text-[#78a68b]">.</span></a><span className="text-xs text-muted-foreground">{hydrated && !auctionId ? 'Draft saved on this device' : 'Set up your fundraiser'}</span></header>
+    <header className="mb-8 flex items-center justify-between gap-4 sm:mb-12"><Link href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[#175b47]"><span className="grid size-9 place-items-center rounded-full bg-[#175b47] text-white"><Leaf size={21}/></span>gather<span className="text-[#78a68b]">.</span></Link><span className="text-xs text-muted-foreground">{hydrated && !auctionId ? 'Draft saved on this device' : 'Set up your fundraiser'}</span></header>
     <ol className="mb-9 flex items-start justify-between gap-1 sm:mb-12">{steps.map((label, index) => <li key={label} className="flex min-w-0 flex-1 items-center gap-2"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${index <= step ? 'bg-[#175b47] text-white' : 'border bg-white text-muted-foreground'}`}>{index < step ? <CheckCircle2 size={16}/> : index + 1}</span><span className={`hidden text-xs leading-tight sm:block ${index <= step ? 'font-semibold text-[#175b47]' : 'text-muted-foreground'}`}>{label}</span>{index < 4 && <span className={`h-px min-w-2 flex-1 ${index < step ? 'bg-[#175b47]' : 'bg-[#dce6df]'}`}/>}</li>)}</ol>
     <section className="rounded-2xl border bg-white p-5 shadow-sm sm:p-7 md:p-10">
       {auctionId ? <Complete auctionId={auctionId}/> : <>{step === 0 && <Organization draft={draft} update={update}/>}
@@ -110,7 +115,7 @@ export default function OnboardingClient() {
 function Heading({ step, title, copy }: { step: string; title: string; copy: string }) { return <><p className="eyebrow mb-3 text-[#648371]">{step}</p><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1><p className="mt-3 max-w-xl leading-relaxed text-muted-foreground">{copy}</p></>; }
 const cleanSlug = (value: string) => value.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
 const pageSlug = (draft: Draft) => draft.nonprofitSlug || cleanSlug(draft.organization);
-function Organization({ draft, update }: { draft: Draft; update: (changes: Partial<Draft>) => void }) { return <div className="max-w-xl"><Heading step="STEP 1 OF 5" title="Your organization." copy="Start with the essentials. You can update this later."/><div className="mt-8 space-y-5"><label className="block text-sm font-medium">Organization name<Input autoFocus className="mt-2 h-12" value={draft.organization} onChange={event => update({ organization: event.target.value })} placeholder="Community Arts Foundation"/></label><label className="block text-sm font-medium">Your name<Input className="mt-2 h-12" value={draft.contactName} onChange={event => update({ contactName: event.target.value })} placeholder="Alex Morgan"/></label><label className="block text-sm font-medium">Email address<Input className="mt-2 h-12" type="email" value={draft.email} onChange={event => update({ email: event.target.value })} placeholder="alex@organization.org"/></label></div></div>; }
+function Organization({ draft, update }: { draft: Draft; update: (changes: Partial<Draft>) => void }) { return <div className="max-w-xl"><Heading step="STEP 1 OF 5" title="Your organization." copy="Start with the essentials. You can update this later."/><div className="mt-8 space-y-5"><label className="block text-sm font-medium">Organization name<Input autoFocus className="mt-2 h-12" value={draft.organization} onChange={event => update({ organization: event.target.value })} placeholder="Community Arts Foundation"/></label><label className="block text-sm font-medium">Your name<Input className="mt-2 h-12" value={draft.contactName} onChange={event => update({ contactName: event.target.value })} placeholder="Alex Morgan"/></label><label className="block text-sm font-medium">Account email<Input className="mt-2 h-12 bg-[#f5f8f6] text-muted-foreground" type="email" value={draft.email} readOnly aria-readonly="true"/><span className="mt-2 block text-xs font-normal leading-5 text-muted-foreground">This is the verified email used to sign in to Gather. An organization contact email, when needed, is managed separately.</span></label></div></div>; }
 function AuctionDetails({ draft, update }: { draft: Draft; update: (changes: Partial<Draft>) => void }) {
   const slug = pageSlug(draft);
   const inPerson = draft.eventType !== 'online_silent';
