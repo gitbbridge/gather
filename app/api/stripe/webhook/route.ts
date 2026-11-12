@@ -3,6 +3,10 @@ import type Stripe from 'stripe';
 import { verifiedStripeEvent } from '@/lib/stripe';
 import { processStripeEvent } from '@/lib/supabase/stripe-events';
 import { assertSafeSandboxEnvironment, isSandboxEnvironment } from '@/lib/staging';
+import {
+  WEBHOOK_PROCESSING_LEASE_SECONDS,
+  webhookFailureMessage,
+} from '@/lib/stripe-webhook-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +47,8 @@ export async function POST(request: Request) {
   try {
     const database = env.DB;
     if (!database) return json({ error: 'Webhook storage is unavailable.' }, 503);
-    const result = await database.prepare(`
+    const now = Math.floor(Date.now() / 1000);
+    await database.prepare(`
       INSERT OR IGNORE INTO stripe_webhook_events
         (id, type, object_id, account_id, livemode, status, stripe_created_at, received_at)
       VALUES (?, ?, ?, ?, ?, 'accepted', ?, ?)
@@ -54,12 +59,43 @@ export async function POST(request: Request) {
       event.account || null,
       event.livemode ? 1 : 0,
       event.created,
-      Math.floor(Date.now() / 1000),
+      now,
     ).run();
 
-    const duplicate = result.meta.changes === 0;
-    if (!duplicate) await processStripeEvent(event);
-    return json({ received: true, duplicate });
+    // Claim new and failed events, or recover work abandoned beyond the lease.
+    // The conditional update is the concurrency guard: only one delivery can
+    // own processing for a given Stripe event at a time.
+    const claim = await database.prepare(`
+      UPDATE stripe_webhook_events
+      SET status = 'processing', received_at = ?, last_error = NULL
+      WHERE id = ? AND (
+        status IN ('accepted', 'failed') OR
+        (status = 'processing' AND received_at <= ?)
+      )
+    `).bind(
+      now,
+      event.id,
+      now - WEBHOOK_PROCESSING_LEASE_SECONDS,
+    ).run();
+
+    if (claim.meta.changes === 0) return json({ received: true, duplicate: true });
+
+    try {
+      await processStripeEvent(event);
+      await database.prepare(`
+        UPDATE stripe_webhook_events
+        SET status = 'processed', processed_at = ?, last_error = NULL
+        WHERE id = ? AND status = 'processing'
+      `).bind(now, event.id).run();
+      return json({ received: true, duplicate: false });
+    } catch (error) {
+      await database.prepare(`
+        UPDATE stripe_webhook_events
+        SET status = 'failed', last_error = ?
+        WHERE id = ? AND status = 'processing'
+      `).bind(webhookFailureMessage(error), event.id).run();
+      throw error;
+    }
   } catch (error) {
     console.error('Unable to record Stripe webhook:', error);
     return json({ error: 'Unable to record Stripe event.' }, 500);
