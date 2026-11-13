@@ -1,4 +1,4 @@
-import AuctionApp from '@/app/auction-app';
+import AuctionApp from '@/app/auction-app-client';
 
 export const metadata = { title: 'Auction preview | Gather' };
 

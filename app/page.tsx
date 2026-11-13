@@ -1,4 +1,4 @@
-import AuctionApp from './auction-app';
+import AuctionApp from './auction-app-client';
 import { LandingPage } from './landing-page';
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ auction?: string }> }) {

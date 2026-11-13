@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import {
   Heart,
   Search,
@@ -908,6 +907,7 @@ export default function AuctionApp({
               <PageTitle
                 title="Manage auction items"
                 description="A thoughtful collection for a meaningful cause."
+                auctionId={data.id || id}
               />
               <div className="flex gap-3 mb-6">
                 <Button
@@ -1474,12 +1474,12 @@ function Stat({
 function PageTitle({
   title,
   description,
+  auctionId = "",
 }: {
   title: string;
   description: string;
+  auctionId?: string;
 }) {
-  const params = useSearchParams();
-  const auction = params.get("auction") || "";
   return (
     <div className="mb-7">
       <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
@@ -1491,7 +1491,7 @@ function PageTitle({
           </span>
           <a
             className="rounded-md px-4 py-2 text-sm font-medium"
-            href={`/admin/experiences${auction ? `?auction=${encodeURIComponent(auction)}` : ""}`}
+            href={`/admin/experiences${auctionId ? `?auction=${encodeURIComponent(auctionId)}` : ""}`}
           >
             Give Holidays Experiences
           </a>

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { integrationOrigin as origin, stagingSession } from './helpers/staging-session.mjs';
-const cookie = await stagingSession(process.env.STAGING_ORGANIZER_EMAIL || 'nonprofit@givholidays.com');
+const cookie = await stagingSession(process.env.STAGING_ORGANIZER_EMAIL || 'nonprofit@giveholidays.com', { accountType: 'organizer' });
+const isoDate = offset => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
 async function post(path, body) { const response = await fetch(origin + path, { method: 'POST', headers: { origin, cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return { status: response.status, data: await response.json() }; }
 
-const created = await post('/api/auction', { action: 'create', key: crypto.randomUUID(), name: 'Homepage verification auction', organization: 'Homepage Verification Fund' });
+const created = await post('/api/auction', { action: 'create', key: crypto.randomUUID(), name: 'Homepage verification auction', organization: 'Homepage Verification Fund', openDate: isoDate(-1), closeDate: isoDate(7) });
 assert.equal(created.status, 200, JSON.stringify(created.data));
 const auctionResponse = await fetch(origin + '/api/auction?id=' + created.data.id, { headers: { cookie } });
 const auctionData = await auctionResponse.json();

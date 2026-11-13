@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
 import { integrationOrigin as origin, stagingSession } from './helpers/staging-session.mjs';
 
-const cookie = await stagingSession(process.env.STAGING_ORGANIZER_EMAIL || 'nonprofit@givholidays.com');
-async function post(path, body) {
-  const response = await fetch(origin + path, { method: 'POST', headers: { origin, cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+const cookie = await stagingSession(process.env.STAGING_ORGANIZER_EMAIL || 'nonprofit@giveholidays.com', { accountType: 'organizer' });
+const bidderCookie = await stagingSession(process.env.STAGING_BIDDER_EMAIL || 'bidder@giveholidays.com', { accountType: 'supporter' });
+const isoDate = offset => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+async function post(path, body, sessionCookie = cookie) {
+  const response = await fetch(origin + path, { method: 'POST', headers: { origin, cookie: sessionCookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   return { status: response.status, data: await response.json() };
 }
 
-const created = await post('/api/auction', { action: 'create', key: crypto.randomUUID(), name: 'Closeout verification', organization: 'Closeout Test Fund' });
+const created = await post('/api/auction', { action: 'create', key: crypto.randomUUID(), name: 'Closeout verification', organization: 'Closeout Test Fund', openDate: isoDate(-1), closeDate: isoDate(7) });
 assert.equal(created.status, 200, JSON.stringify(created.data));
 const publicAuction = await (await fetch(origin + '/api/auction?id=' + created.data.id)).json();
-const joined = await post('/api/nonprofit', { action: 'join', slug: publicAuction.nonprofit.slug, auctionId: created.data.id, item: '101', name: 'Closeout Tester' });
+const itemId = publicAuction.state.items[0].id;
+const joined = await post('/api/nonprofit', { action: 'join', slug: publicAuction.nonprofit.slug, auctionId: created.data.id, item: itemId, name: 'Closeout Tester' }, bidderCookie);
 assert.equal(joined.status, 200, JSON.stringify(joined.data));
-const placed = await post('/api/auction', { action: 'bid', id: created.data.id, item: '101', amount: 30000, key: crypto.randomUUID() });
+const placed = await post('/api/auction', { action: 'bid', id: created.data.id, item: itemId, amount: 30000, key: crypto.randomUUID() }, bidderCookie);
 assert.equal(placed.status, 200, JSON.stringify(placed.data));
 
 let response = await fetch(origin + '/api/closeout?auction=' + created.data.id, { headers: { cookie } });
