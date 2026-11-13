@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.GATHER_TEST_ORIGIN || "http://localhost:5173";
+const baseURL = process.env.GATHER_TEST_ORIGIN || "http://127.0.0.1:8787";
 const target = new URL(baseURL);
 const allowedHosts = new Set([
   "127.0.0.1",
@@ -45,7 +45,7 @@ export default defineConfig({
   ],
   webServer: localTarget
     ? {
-        command: "npm run dev",
+        command: "npm run staging:start:local",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,

@@ -15,6 +15,7 @@
     "production:validate:launch": "node scripts/validate-production-config.mjs --launch",
     "db:generate": "drizzle-kit generate",
     "staging:validate": "node scripts/validate-staging-config.mjs",
+    "staging:start:local": "node scripts/start-staging-local.mjs",
     "test:integration:staging": "node --env-file=.env.staging.local tests/nonprofits.integration.mjs && node --env-file=.env.staging.local tests/homepage.integration.mjs && node --env-file=.env.staging.local tests/closeout.integration.mjs",
     "test:e2e:install": "playwright install chromium",
     "test:e2e:staging": "node --env-file=.env.staging.local ./node_modules/@playwright/test/cli.js test",
