@@ -6,6 +6,8 @@ const organizerEmail =
   process.env.STAGING_ORGANIZER_EMAIL || "nonprofit@giveholidays.com";
 const bidderEmail =
   process.env.STAGING_BIDDER_EMAIL || "bidder@giveholidays.com";
+const administratorEmail =
+  process.env.STAGING_ADMIN_EMAIL || "admin@giveholidays.com";
 const origin = process.env.GATHER_TEST_ORIGIN || "http://127.0.0.1:8787";
 
 async function signIn(
@@ -76,5 +78,18 @@ test.describe("authenticated role routing", () => {
     await expect(page.getByText("SUPPORTER HOME")).toBeVisible();
     await expect(page.getByText("My wins & purchases")).toBeVisible();
     await expect(page.getByText("Your nonprofit auctions")).toBeVisible();
+  });
+
+  test("a platform administrator reaches the administration workspace", async ({
+    page,
+  }) => {
+    await signIn(page, administratorEmail, "/admin");
+    await expect(page).toHaveURL(/\/admin(?:\?|$)/, { timeout: 15_000 });
+    await expect(
+      page.getByRole("link", { name: "Email templates", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Security", exact: true }),
+    ).toBeVisible();
   });
 });
