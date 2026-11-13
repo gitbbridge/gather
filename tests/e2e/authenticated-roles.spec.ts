@@ -91,5 +91,18 @@ test.describe("authenticated role routing", () => {
     await expect(
       page.getByRole("link", { name: "Security", exact: true }),
     ).toBeVisible();
+
+    await page.goto("/admin/give-holidays");
+    await expect(
+      page.getByRole("heading", { name: "Give Holidays catalog" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Auction fulfillment" }),
+    ).toBeVisible();
+
+    await page.goto("/admin/give-holidays/fulfillments");
+    await expect(
+      page.getByRole("heading", { name: "Travel fulfillment" }),
+    ).toBeVisible();
   });
 });
