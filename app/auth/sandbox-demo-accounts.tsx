@@ -6,7 +6,7 @@ import { useState } from "react";
 const demoAccounts = [
   {
     role: "Nonprofit organizer",
-    email: "nonprofit@givholidays.com",
+    email: "nonprofit@giveholidays.com",
     destination: "Organizer workspace and onboarding",
   },
   {
