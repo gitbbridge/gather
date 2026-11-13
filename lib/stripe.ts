@@ -25,6 +25,10 @@ export function stripe() {
   return stripeClient;
 }
 
+export function stripeLivemode() {
+  return requiredSecret('STRIPE_SECRET_KEY').startsWith('sk_live_');
+}
+
 export async function verifiedStripeEvent(payload: string, signature: string) {
   return stripe().webhooks.constructEventAsync(
     payload,

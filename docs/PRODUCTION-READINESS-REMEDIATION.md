@@ -14,17 +14,19 @@ This file tracks the eight audit findings that caused failed or blocked scenario
 | AUD-005 | The Gather Live projector treated permanent 404/403 responses like temporary network failures. | Stop polling on permanent failures and render a terminal error with a safe exit. | **Resolved.** Commit `856b6a5`; focused lint, TypeScript, and eight live-display tests pass. |
 | AUD-006 | No maintained browser E2E suite or reliable mobile role fixtures existed. | Add staging-backed browser tests for public, organizer, bidder, administrator, payments, and mobile layouts. | **In progress.** A production-refusing Playwright suite covers the approved homepage, About Give Holidays navigation, help/legal/support availability, signed-out organizer routing, authenticated organizer/supporter routing, and overflow at desktop and mobile sizes. Twelve browser checks pass. Platform-administrator and payment browser coverage remain. |
 | AUD-007 | Hosted production URL, Supabase, Stripe, Resend, redirects, webhook, and MFA settings were not compared with an explicit manifest. | Verify non-secret hosting values and external provider settings; document promotion checks. | **In progress.** A no-secret baseline/launch validator and provider checklist now define the production manifest. Production `APP_URL` and the approved Supabase project match; Stripe remains in test mode. Supabase redirects, Resend sender verification, Stripe live webhook, live keys, and MFA enrollment still require provider-side confirmation before the strict launch gate can pass. |
-| AUD-008 | Checkout, signed webhooks, retries, refunds, idempotency, and fulfillment lacked a disposable full-stack path. | Seed staging invoices/Connect data and execute Stripe test-mode lifecycle assertions. | **In progress.** Webhook intake now atomically claims events, suppresses concurrent/processed duplicates, retries failed events, and recovers abandoned processing leases. Focused state tests pass. Full checkout, signed delivery, refund, settlement, and fulfillment execution still depends on AUD-001/AUD-002 fixtures. |
+| AUD-008 | Checkout, signed webhooks, retries, refunds, idempotency, and fulfillment lacked a disposable full-stack path. | Seed staging invoices/Connect data and execute Stripe test-mode lifecycle assertions. | **In progress.** Webhook intake now atomically claims events, suppresses concurrent/processed duplicates, retries failed events, and recovers abandoned processing leases. The organizer onboarding routes now use the Stripe Express Connect API supported by the configured account, and connection-state tests pass. A test-mode API probe confirmed the code reaches Stripe, but Stripe rejects connected-account creation until Connect is activated for the platform. Full checkout, signed delivery, refund, settlement, and fulfillment execution still depends on Connect activation and staging payment/travel fixtures. |
 
 ## Repair order
 
 1. Apply the forward-only pgcrypto search-path migration to staging and confirm auction synchronization (`AUD-001`).
 2. Seed hosted D1 invoice and travel fixtures (`AUD-001`).
 3. Add authenticated browser/mobile role coverage (`AUD-006`).
-4. Execute Stripe test checkout, webhook duplication, failure, retry, refund, settlement, and fulfillment (`AUD-008`).
+4. Activate Stripe Connect for the platform, then execute test checkout, webhook duplication, failure, retry, refund, settlement, and fulfillment (`AUD-008`).
 5. Finish provider-side production configuration verification (`AUD-007`).
 6. Repeat the audit and retain evidence before any real-money launch decision.
 
 ## Required external action
 
 Apply `202611120001_fix_pgcrypto_function_resolution.sql` to the isolated staging Supabase project. Do not apply it to production until staging synchronization has been verified and a separate production migration is explicitly authorized.
+
+Activate Connect in the Stripe Dashboard for the configured platform account at `https://dashboard.stripe.com/connect`. This is required before Stripe permits Gather to create even test-mode Express connected accounts. No live-mode keys or payments are required for this staging step.

@@ -1,14 +1,8 @@
-import type Stripe from 'stripe';
 import { database } from '@/lib/nonprofits';
+import { type PaymentConnection } from '@/lib/payment-connection';
 
-export type PaymentConnectionStatus = 'not_connected' | 'pending' | 'ready' | 'restricted';
-
-export type PaymentConnection = {
-  status: PaymentConnectionStatus;
-  cardPaymentsStatus: string;
-  payoutsStatus: string;
-  livemode: boolean;
-};
+export { stripeConnection } from '@/lib/payment-connection';
+export type { PaymentConnection, PaymentConnectionStatus } from '@/lib/payment-connection';
 
 type PaymentAccountRow = PaymentConnection & {
   nonprofitId: string;
@@ -35,18 +29,6 @@ export async function paymentAccount(nonprofitId: string) {
 export async function paymentConnection(nonprofitId: string): Promise<PaymentConnection> {
   const row = await paymentAccount(nonprofitId);
   return row ? publicConnection(row) : notConnected;
-}
-
-export function stripeConnection(account: Stripe.V2.Core.Account): PaymentConnection {
-  const cardPaymentsStatus = account.configuration?.merchant?.capabilities?.card_payments?.status || 'pending';
-  const payoutsStatus = account.configuration?.merchant?.capabilities?.stripe_balance?.payouts?.status || 'pending';
-  const rejected = ['rejected', 'restricted', 'unsupported'];
-  const status: PaymentConnectionStatus = cardPaymentsStatus === 'active' && payoutsStatus === 'active'
-    ? 'ready'
-    : rejected.includes(cardPaymentsStatus) || rejected.includes(payoutsStatus)
-      ? 'restricted'
-      : 'pending';
-  return { status, cardPaymentsStatus, payoutsStatus, livemode: account.livemode };
 }
 
 export async function savePaymentAccount(nonprofitId: string, stripeAccountId: string, connection: PaymentConnection) {

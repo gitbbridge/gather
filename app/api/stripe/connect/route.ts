@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { getAppUser } from '@/lib/auth';
 import { nonprofitById } from '@/lib/nonprofits';
 import { paymentAccount, paymentConnection, savePaymentAccount, stripeConnection } from '@/lib/payments';
-import { stripe } from '@/lib/stripe';
+import { stripe, stripeLivemode } from '@/lib/stripe';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,10 +41,8 @@ export async function GET(request: Request) {
     if (!stored) return json({ connection: await paymentConnection(nonprofit.id) });
 
     try {
-      const account = await stripe().v2.core.accounts.retrieve(stored.stripeAccountId, {
-        include: ['configuration.merchant', 'requirements', 'future_requirements'],
-      });
-      const connection = stripeConnection(account);
+      const account = await stripe().accounts.retrieve(stored.stripeAccountId);
+      const connection = stripeConnection(account, stripeLivemode());
       await savePaymentAccount(nonprofit.id, account.id, connection);
       return json({ connection });
     } catch (error) {
@@ -73,30 +71,23 @@ export async function POST(request: Request) {
     let stored = await paymentAccount(nonprofit.id);
     if (!stored) {
       const base = publicBase(request);
-      const account = await stripe().v2.core.accounts.create({
-        contact_email: user.email,
-        display_name: nonprofit.name,
-        dashboard: 'express',
-        defaults: {
-          currency: 'usd',
-          locales: ['en-US'],
-          profile: {
-            business_url: `${base}/n/${encodeURIComponent(nonprofit.slug)}`,
-            product_description: 'Nonprofit fundraising auctions and winning-bid payments.',
-          },
-          responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' },
+      const account = await stripe().accounts.create({
+        type: 'express',
+        country: 'US',
+        email: user.email,
+        default_currency: 'usd',
+        business_profile: {
+          name: nonprofit.name,
+          url: `${base}/n/${encodeURIComponent(nonprofit.slug)}`,
+          product_description: 'Nonprofit fundraising auctions and winning-bid payments.',
         },
-        configuration: {
-          merchant: {
-            capabilities: {
-              card_payments: { requested: true },
-            },
-          },
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
         },
         metadata: { gather_nonprofit_id: nonprofit.id },
-        include: ['configuration.merchant', 'requirements', 'future_requirements'],
       }, { idempotencyKey: `gather-connect-${nonprofit.id}` });
-      await savePaymentAccount(nonprofit.id, account.id, stripeConnection(account));
+      await savePaymentAccount(nonprofit.id, account.id, stripeConnection(account, stripeLivemode()));
       stored = await paymentAccount(nonprofit.id);
     }
     if (!stored) throw new Error('Stripe account could not be saved.');
@@ -105,16 +96,12 @@ export async function POST(request: Request) {
     const refresh = new URL('/api/stripe/connect/refresh', callbackOrigin);
     refresh.searchParams.set('nonprofit', nonprofit.id);
     if (auctionId) refresh.searchParams.set('auction', auctionId);
-    const link = await stripe().v2.core.accountLinks.create({
+    const link = await stripe().accountLinks.create({
       account: stored.stripeAccountId,
-      use_case: {
-        type: 'account_onboarding',
-        account_onboarding: {
-          refresh_url: refresh.toString(),
-          return_url: new URL(returnPath(auctionId), callbackOrigin).toString(),
-          collection_options: { fields: 'eventually_due', future_requirements: 'include' },
-        },
-      },
+      type: 'account_onboarding',
+      refresh_url: refresh.toString(),
+      return_url: new URL(returnPath(auctionId), callbackOrigin).toString(),
+      collection_options: { fields: 'eventually_due', future_requirements: 'include' },
     });
     return json({ url: link.url });
   } catch (error) {

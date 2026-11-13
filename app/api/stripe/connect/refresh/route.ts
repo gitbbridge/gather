@@ -28,16 +28,12 @@ export async function GET(request: Request) {
     refreshUrl.searchParams.set('nonprofit', nonprofit.id);
     if (auctionId) refreshUrl.searchParams.set('auction', auctionId);
     returnUrl.searchParams.set('stripe', 'returned');
-    const link = await stripe().v2.core.accountLinks.create({
+    const link = await stripe().accountLinks.create({
       account: stored.stripeAccountId,
-      use_case: {
-        type: 'account_onboarding',
-        account_onboarding: {
-          refresh_url: refreshUrl.toString(),
-          return_url: returnUrl.toString(),
-          collection_options: { fields: 'eventually_due', future_requirements: 'include' },
-        },
-      },
+      type: 'account_onboarding',
+      refresh_url: refreshUrl.toString(),
+      return_url: returnUrl.toString(),
+      collection_options: { fields: 'eventually_due', future_requirements: 'include' },
     });
     return Response.redirect(link.url, 303);
   } catch (error) {
