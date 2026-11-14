@@ -19,7 +19,9 @@ import {
 import { recordSupporterActivity } from "@/lib/supabase/supporters";
 import { canCreateOrganization } from "@/lib/auth-destination";
 import { rateLimitResponse, trustedMutationOrigin } from "@/lib/security/rate-limit";
+import { defaultHomepage } from "@/lib/homepage";
 export const dynamic = "force-dynamic";
+const imageUrl = z.union([z.literal(""), z.string().url().refine(value => value.startsWith("https://"), "Use an HTTPS image URL.")]);
 const starterItem = z.object({
   title: z.string().trim().min(1).max(100),
   value: z.number().int().min(0).max(100000000),
@@ -31,6 +33,21 @@ const starterItem = z.object({
     .max(30)
     .regex(/^[A-Za-z0-9_-]+$/)
     .optional(),
+  category: z.enum(["Getaways", "Food & drink", "Art & home", "Wellness", "Experiences"]).optional(),
+  description: z.string().trim().max(2000).optional(),
+  donor: z.string().trim().max(100).optional(),
+  image: imageUrl.optional(),
+  start: z.number().int().min(100).max(100000000).optional(),
+  increment: z.number().int().min(100).max(1000000).optional(),
+  buyNow: z.number().int().min(0).max(100000000).optional(),
+  taxable: z.boolean().optional(),
+  taxRateBps: z.number().int().min(0).max(2500).optional(),
+});
+const setupQuestion = z.object({
+  id: z.string().uuid(),
+  label: z.string().trim().min(2).max(160),
+  scope: z.enum(["bidder", "item"]),
+  required: z.boolean(),
 });
 const input = z.object({
   action: z.enum([
@@ -59,6 +76,10 @@ const input = z.object({
     .max(48)
     .optional(),
   nonprofitId: z.string().max(100).optional(),
+  organizationContactEmail: z.union([z.literal(""), z.string().email().max(200)]).optional(),
+  brandLogoUrl: imageUrl.optional(),
+  brandBannerUrl: imageUrl.optional(),
+  brandColor: z.enum(["#175b47", "#264d7e", "#763e62", "#8b431e", "#5b4b8a"]).optional(),
   paused: z.boolean().optional(),
   eventType: z.enum(["online_silent", "live", "hybrid"]).optional(),
   eventDescription: z.string().trim().max(1000).optional(),
@@ -98,6 +119,17 @@ const input = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  openAt: z.string().datetime().optional(),
+  closeAt: z.string().datetime().optional(),
+  pickupEnabled: z.boolean().optional(),
+  pickupAddress: z.string().trim().max(300).optional(),
+  pickupInstructions: z.string().trim().max(1000).optional(),
+  shippingEnabled: z.boolean().optional(),
+  shippingFeeCents: z.number().int().min(0).max(1000000).optional(),
+  phoneRequired: z.boolean().optional(),
+  addressRequired: z.boolean().optional(),
+  countryStateRequired: z.boolean().optional(),
+  customQuestions: z.array(setupQuestion).max(12).optional(),
   commissionPayer: z.enum(["organizer", "split", "bidder"]).optional(),
   organizerShare: z.number().int().min(0).max(100).optional(),
   items: z.array(starterItem).max(25).optional(),
@@ -273,10 +305,10 @@ export async function POST(req: Request) {
     if (!user) return json({ error: "Sign in to continue." }, 401);
     const limited = await rateLimitResponse(req, { bucket: "auction-mutation", limit: 60, windowSeconds: 60, identity: user.userId });
     if (limited) return limited;
-    if (Number(req.headers.get("content-length") || 0) > 16000)
+    if (Number(req.headers.get("content-length") || 0) > 64000)
       return json({ error: "Request too large." }, 413);
     const raw = await req.text();
-    if (raw.length > 16000) return json({ error: "Request too large." }, 413);
+    if (raw.length > 64000) return json({ error: "Request too large." }, 413);
     const parsed = input.safeParse(JSON.parse(raw));
     if (!parsed.success)
       return json({ error: "Check the information and try again." }, 400);
@@ -326,7 +358,18 @@ export async function POST(req: Request) {
           409,
         );
       const writes = [];
-      if (!x.nonprofitId)
+      if (!x.nonprofitId) {
+        const accent = x.brandColor || "#175b47";
+        const headline = "Good things happen when we give together.";
+        const mission = `Support ${organization || "My nonprofit"} by discovering something you love. Every bid helps make our work possible.`;
+        const homepage = defaultHomepage({ id: nonprofitId, slug: nonprofitSlug, name: organization || "My nonprofit", headline, mission, accent }, []);
+        homepage.theme.primary = accent;
+        homepage.sections = homepage.sections.map(section => {
+          if (section.type === "header") return { ...section, logoUrl: x.brandLogoUrl || "", logoAlt: x.brandLogoUrl ? `${organization || "Nonprofit"} logo` : "" };
+          if (section.type === "hero") return { ...section, imageUrl: x.brandBannerUrl || "", imageAlt: x.brandBannerUrl ? `${organization || "Nonprofit"} supporters and community` : "" };
+          if (section.type === "contact" && x.organizationContactEmail) return { ...section, email: x.organizationContactEmail };
+          return section;
+        });
         writes.push(
           nonprofitInsert(
             id,
@@ -334,11 +377,17 @@ export async function POST(req: Request) {
             organization || "My nonprofit",
             x.nonprofitSlug,
           ),
+          db().prepare("INSERT INTO nonprofit_homepages (nonprofit_id,draft,published,draft_version,updated_at,published_at) VALUES (?,?,NULL,1,?,NULL) ON CONFLICT(nonprofit_id) DO NOTHING").bind(nonprofitId, JSON.stringify(homepage), Date.now()),
         );
-      const starts = x.openDate
+      }
+      const starts = x.openAt
+        ? new Date(x.openAt).getTime()
+        : x.openDate
         ? new Date(`${x.openDate}T00:00:00`).getTime()
         : undefined;
-      const ends = x.closeDate
+      const ends = x.closeAt
+        ? new Date(x.closeAt).getTime()
+        : x.closeDate
         ? new Date(`${x.closeDate}T23:59:59`).getTime()
         : undefined;
       if (starts && ends && ends <= starts)
@@ -381,6 +430,19 @@ export async function POST(req: Request) {
             eventType === "online_silent" || !!x.plannedSilentAuction,
           donationAppeal: !!x.plannedDonationAppeal,
         },
+        fulfillmentPolicy: {
+          pickupEnabled: x.pickupEnabled ?? true,
+          pickupAddress: x.pickupAddress || "",
+          pickupInstructions: x.pickupInstructions || "",
+          shippingEnabled: x.shippingEnabled ?? false,
+          shippingFeeCents: x.shippingFeeCents || 0,
+        },
+        bidderFields: {
+          phoneRequired: !!x.phoneRequired,
+          addressRequired: !!x.addressRequired,
+          countryStateRequired: x.countryStateRequired ?? true,
+        },
+        customQuestions: x.customQuestions,
       });
       writes.push(
         db()
