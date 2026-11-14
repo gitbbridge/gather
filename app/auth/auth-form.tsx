@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   createSupabaseBrowserClient,
   type SupabaseBrowserConfig,
@@ -212,10 +213,9 @@ export function AuthForm({
         {mode !== "forgot" && (
           <label className="block text-sm font-medium">
             Password
-            <Input
+            <PasswordInput
               className="mt-2 h-12"
               name="password"
-              type="password"
               autoComplete={
                 mode === "signin" ? "current-password" : "new-password"
               }
