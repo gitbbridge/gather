@@ -70,12 +70,14 @@ export default function EmailReceiptsClient({
   verified: boolean;
 }) {
   const [data, setData] = useState<Payload | null>(null),
+    [loadError, setLoadError] = useState(""),
     [auctionId, setAuctionId] = useState("organization"),
     [form, setForm] = useState(defaults),
     [mobile, setMobile] = useState(false),
     [busy, setBusy] = useState(false);
   const load = useCallback(async () => {
     if (!organizationId) return;
+    setLoadError("");
     const response = await fetch(
       `/api/email-settings?organization=${organizationId}`,
     );
@@ -100,7 +102,12 @@ export default function EmailReceiptsClient({
   useEffect(() => {
     // Loading remote state is the purpose of this effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    load().catch((error) => toast.error(error.message));
+    load().catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Unable to load settings.";
+      setLoadError(message);
+      toast.error(message);
+    });
     if (verified) toast.success("Reply-to address verified");
   }, [load, verified]);
   useEffect(() => {
@@ -181,6 +188,14 @@ export default function EmailReceiptsClient({
   if (!organizationId)
     return (
       <Empty text="Open Email & Receipts from an organization dashboard." />
+    );
+  if (loadError)
+    return (
+      <Empty
+        text={loadError}
+        actionLabel="Try again"
+        onAction={() => void load()}
+      />
     );
   if (!data) return <Empty text="Loading email settings…" loading />;
   const color = data.organization.accent_color || "#175b47";
@@ -484,12 +499,27 @@ function Row({
     </div>
   );
 }
-function Empty({ text, loading }: { text: string; loading?: boolean }) {
+function Empty({
+  text,
+  loading,
+  actionLabel,
+  onAction,
+}: {
+  text: string;
+  loading?: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#f4f7f5] p-6">
       <div className="rounded-2xl border bg-white p-8 text-center text-muted-foreground">
         {loading && <LoaderCircle className="mx-auto mb-3 animate-spin" />}
-        {text}
+        <p>{text}</p>
+        {actionLabel && onAction && (
+          <Button className="mt-4" onClick={onAction}>
+            {actionLabel}
+          </Button>
+        )}
       </div>
     </main>
   );

@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       .eq("organization_id", organizationId),
     database()
       .prepare(
-        "SELECT id,state FROM auctions WHERE nonprofit_id=? ORDER BY created DESC",
+        "SELECT id,state FROM auctions WHERE nonprofit_id=? ORDER BY rowid DESC",
       )
       .bind(organizationId)
       .all<{ id: string; state: string }>(),
@@ -68,9 +68,15 @@ export async function GET(request: Request) {
     const state = JSON.parse(row.state) as { name?: string };
     return { id: row.id, name: state.name || "Auction" };
   });
+  const organizationProfile = organization || {
+    id: access.nonprofit.id,
+    display_name: access.nonprofit.name,
+    logo_url: null,
+    accent_color: access.nonprofit.accent,
+  };
   return Response.json(
     {
-      organization,
+      organization: organizationProfile,
       settings,
       overrides: overrides || [],
       auctions,
