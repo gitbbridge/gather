@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { SandboxIndicator } from "@/components/sandbox-indicator";
 import {
-  assertSafeSandboxEnvironment,
   isSandboxEnvironment,
+  sandboxSafetyErrors,
 } from "@/lib/staging";
 import "./globals.css";
 
@@ -21,7 +21,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const sandbox = isSandboxEnvironment();
-  if (sandbox) assertSafeSandboxEnvironment();
+  const sandboxErrors = sandbox ? sandboxSafetyErrors() : [];
+
+  if (sandboxErrors.length) {
+    console.error("Sandbox configuration blocked:", sandboxErrors);
+    return (
+      <html lang="en">
+        <body className="antialiased">
+          <SandboxIndicator />
+          <main className="mx-auto flex min-h-screen max-w-2xl items-center px-6 py-24">
+            <section className="w-full rounded-2xl border border-red-200 bg-white p-8 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">
+                Sandbox configuration
+              </p>
+              <h1 className="mt-3 text-2xl font-semibold text-slate-950">
+                This test environment is safely paused.
+              </h1>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                The sandbox will remain unavailable until its isolated test configuration is complete.
+              </p>
+              <ul className="mt-5 list-disc space-y-2 pl-5 text-sm text-red-800">
+                {sandboxErrors.map((error) => <li key={error}>{error}</li>)}
+              </ul>
+            </section>
+          </main>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">
