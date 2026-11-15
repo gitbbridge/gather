@@ -32,6 +32,14 @@ export function SandboxDemoAccounts({ password }: { password: string }) {
     window.setTimeout(() => setCopied(""), 1500);
   }
 
+  function selectAccount(email: string) {
+    window.dispatchEvent(
+      new CustomEvent("gather:demo-account", {
+        detail: { email, password },
+      }),
+    );
+  }
+
   return (
     <section className="mt-5 overflow-hidden rounded-2xl border border-[#cfded5] bg-white shadow-sm">
       <div className="flex items-start gap-3 border-b bg-[#eef5f1] px-5 py-4">
@@ -104,12 +112,12 @@ export function SandboxDemoAccounts({ password }: { password: string }) {
               </div>
               <button
                 type="button"
-                onClick={() => void copy(account.email, account.email)}
+                onClick={() => selectAccount(account.email)}
                 className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold text-[#175b47] hover:bg-[#f2f7f4]"
-                aria-label={`Copy ${account.role} email`}
+                aria-label={`Use ${account.role} demo account`}
               >
-                {copied === account.email ? <Check size={14} /> : <Clipboard size={14} />}
-                {copied === account.email ? "Copied" : "Copy email"}
+                <Check size={14} />
+                Use account
               </button>
             </div>
             <code className="mt-3 block overflow-x-auto rounded-lg bg-[#f5f8f6] px-3 py-2 text-xs text-[#244c3e]">

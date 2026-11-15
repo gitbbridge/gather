@@ -27,6 +27,14 @@ export default async function AuthPage({
   const demoPassword = isSandboxEnvironment()
     ? process.env.SANDBOX_DEMO_PASSWORD?.trim()
     : "";
+  const demoEmail = returnTo.startsWith("/account") ||
+    returnTo.startsWith("/my-wins") ||
+    returnTo.startsWith("/n/")
+    ? "bidder@giveholidays.com"
+    : returnTo.startsWith("/admin/give-holidays") ||
+        returnTo.startsWith("/testing")
+      ? "admin@giveholidays.com"
+      : "nonprofit@giveholidays.com";
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#f4f7f5] px-5 py-10">
@@ -68,6 +76,11 @@ export default async function AuthPage({
                   : error === "callback"
                     ? "We could not complete that secure sign-in link. Please try again."
                     : ""
+              }
+              sandboxAutoLogin={
+                demoPassword
+                  ? { email: demoEmail, password: demoPassword }
+                  : undefined
               }
             />
           ) : (

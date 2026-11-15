@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,11 +22,13 @@ export function AuthForm({
   initialMode = "signin",
   initialMessage = "",
   supabaseConfig,
+  sandboxAutoLogin,
 }: {
   returnTo: string;
   initialMode?: "signin" | "signup" | "forgot";
   initialMessage?: string;
   supabaseConfig: SupabaseBrowserConfig;
+  sandboxAutoLogin?: { email: string; password: string };
 }) {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">(initialMode);
   const [busy, setBusy] = useState(false);
@@ -39,6 +41,54 @@ export function AuthForm({
           ? "organizer"
           : "supporter",
   );
+  const autoLoginStarted = useRef(false);
+
+  useEffect(() => {
+    if (!sandboxAutoLogin || autoLoginStarted.current) return;
+    autoLoginStarted.current = true;
+    setBusy(true);
+    setMessage("Opening the sandbox demo…");
+    const supabase = createSupabaseBrowserClient(supabaseConfig);
+    void supabase.auth
+      .signInWithPassword(sandboxAutoLogin)
+      .then(({ error }) => {
+        if (error) throw error;
+        window.location.assign(
+          `/auth/complete?return_to=${encodeURIComponent(returnTo)}`,
+        );
+      })
+      .catch((reason: unknown) => {
+        setMessage(
+          reason instanceof Error
+            ? `Automatic sandbox access failed: ${reason.message}`
+            : "Automatic sandbox access failed. Use a demo account below.",
+        );
+        setBusy(false);
+      });
+  }, [returnTo, sandboxAutoLogin, supabaseConfig]);
+
+  useEffect(() => {
+    function useDemoAccount(event: Event) {
+      const detail = (event as CustomEvent<{ email?: string; password?: string }>).detail;
+      if (!detail?.email || !detail.password) return;
+      setMode("signin");
+      setMessage("");
+      const emailInput = document.querySelector<HTMLInputElement>('input[name="email"]');
+      const passwordInput = document.querySelector<HTMLInputElement>('input[name="password"]');
+      if (emailInput) {
+        emailInput.value = detail.email;
+        emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (passwordInput) {
+        passwordInput.value = detail.password;
+        passwordInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      emailInput?.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.addEventListener("gather:demo-account", useDemoAccount);
+    return () => window.removeEventListener("gather:demo-account", useDemoAccount);
+  }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
