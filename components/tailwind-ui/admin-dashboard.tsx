@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -10,11 +11,14 @@ import {
   ExternalLink,
   HandCoins,
   Handshake,
+  Home,
   Gavel,
   History,
   LayoutTemplate,
   Mail,
   MessageSquare,
+  MoreHorizontal,
+  PackageSearch,
   Plane,
   Ticket,
   Users,
@@ -97,6 +101,10 @@ export function AdminDashboard({
   onOpenAuction,
   onViewAuction,
 }: AdminDashboardProps) {
+  const [showAllPrevious, setShowAllPrevious] = useState(false);
+  const visiblePreviousAuctions = showAllPrevious
+    ? previousAuctions
+    : previousAuctions.slice(0, 3);
   const checks = [
     {
       label: "Auction page",
@@ -147,7 +155,7 @@ export function AdminDashboard({
             Keep {auction.name} moving forward.
           </p>
         </div>
-        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+        <div className="hidden w-auto flex-wrap gap-2 sm:flex">
           <Button variant="outline" onClick={onHomepage} disabled={!nonprofit}>
             <LayoutTemplate size={16} />
             Auction page
@@ -196,6 +204,35 @@ export function AdminDashboard({
             <ArrowUpRight size={16} />
             New auction
           </Button>
+        </div>
+        <div id="mobile-tools" className="grid w-full grid-cols-2 gap-2 sm:hidden">
+          <Button variant="outline" onClick={onHomepage} disabled={!nonprofit} className="min-h-12 justify-start">
+            <LayoutTemplate size={17} /> Auction page
+          </Button>
+          <Button variant="outline" onClick={onManageItems} className="min-h-12 justify-start">
+            <PackageSearch size={17} /> Items
+          </Button>
+          <Button variant="outline" onClick={onSupporters} className="min-h-12 justify-start">
+            <Users size={17} /> Supporters
+          </Button>
+          <Button variant="outline" onClick={onSettlement} className="min-h-12 justify-start">
+            <HandCoins size={17} /> Close out
+          </Button>
+          <details className="col-span-2 rounded-xl border bg-white">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-4 text-sm font-semibold text-[#175b47]">
+              <span className="flex items-center gap-2"><MoreHorizontal size={17} /> More organizer tools</span>
+              <span aria-hidden="true">+</span>
+            </summary>
+            <div className="grid grid-cols-2 gap-2 border-t p-3">
+              <Button variant="ghost" onClick={onMessages} disabled={!nonprofit} className="justify-start"><MessageSquare size={16} /> Messages</Button>
+              <Button variant="ghost" onClick={onEmailSettings} disabled={!nonprofit} className="justify-start"><Mail size={16} /> Email</Button>
+              <Button variant="ghost" onClick={onDirectOffers} disabled={!nonprofit} className="justify-start"><Plane size={16} /> Offers</Button>
+              <Button variant="ghost" onClick={onTickets} disabled={!nonprofit} className="justify-start"><Ticket size={16} /> Tickets</Button>
+              <Button variant="ghost" onClick={onSponsors} disabled={!nonprofit} className="justify-start"><Handshake size={16} /> Sponsors</Button>
+              <Button variant="ghost" onClick={onLive} disabled={!nonprofit} className="justify-start"><Gavel size={16} /> Gather Live</Button>
+              <Button onClick={onCreateAuction} className="col-span-2"><ArrowUpRight size={16} /> New auction</Button>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -314,7 +351,7 @@ export function AdminDashboard({
         </div>
         {previousAuctions.length ? (
           <div className="divide-y">
-            {previousAuctions.map((previous) => (
+            {visiblePreviousAuctions.map((previous) => (
               <article
                 key={previous.id}
                 className="grid gap-4 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center"
@@ -346,6 +383,19 @@ export function AdminDashboard({
                 </div>
               </article>
             ))}
+            {previousAuctions.length > 3 ? (
+              <div className="px-5 py-4 text-center sm:px-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAllPrevious((show) => !show)}
+                  className="w-full sm:w-auto"
+                >
+                  {showAllPrevious
+                    ? "Show recent auctions"
+                    : `View all ${previousAuctions.length} previous auctions`}
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="px-6 py-10 text-center">
@@ -419,6 +469,14 @@ export function AdminDashboard({
           </div>
         </section>
       </div>
+
+      <nav aria-label="Organizer navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-[#d8e2dc] bg-white/95 px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-8px_24px_rgba(23,61,49,0.08)] backdrop-blur sm:hidden">
+        <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="grid min-h-14 place-items-center gap-0.5 rounded-lg text-[10px] font-semibold text-[#175b47]"><Home size={19} /><span>Home</span></button>
+        <button type="button" onClick={onHomepage} disabled={!nonprofit} className="grid min-h-14 place-items-center gap-0.5 rounded-lg text-[10px] font-semibold text-[#175b47] disabled:opacity-40"><LayoutTemplate size={19} /><span>Auction</span></button>
+        <button type="button" onClick={onManageItems} className="grid min-h-14 place-items-center gap-0.5 rounded-lg text-[10px] font-semibold text-[#175b47]"><PackageSearch size={19} /><span>Items</span></button>
+        <button type="button" onClick={onSupporters} className="grid min-h-14 place-items-center gap-0.5 rounded-lg text-[10px] font-semibold text-[#175b47]"><Users size={19} /><span>Supporters</span></button>
+        <button type="button" onClick={() => document.getElementById("mobile-tools")?.scrollIntoView({ behavior: "smooth" })} className="grid min-h-14 place-items-center gap-0.5 rounded-lg text-[10px] font-semibold text-[#175b47]"><MoreHorizontal size={19} /><span>More</span></button>
+      </nav>
     </div>
   );
 }
