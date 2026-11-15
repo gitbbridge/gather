@@ -19,7 +19,7 @@ export async function sendInvoiceReceipt(
     .from("winner_invoices")
     .select(
       `
-    id,payer_id,auction_id,status,total_due_cents,hammer_subtotal_cents,bidder_platform_fee_cents,
+    id,payer_id,auction_id,status,total_due_cents,hammer_subtotal_cents,optional_gather_support_cents,
     processing_fee_cents,stripe_payment_intent_id,paid_at,receipt_number,
     auctions(name,organization_id,organizations(display_name)),
     winner_invoice_items(hammer_price_cents,auction_items(title,source))
@@ -112,7 +112,7 @@ export async function sendInvoiceReceipt(
         )
         .join("; "),
       hammerSubtotal: money(Number(invoice.hammer_subtotal_cents || 0)),
-      bidderFee: money(Number(invoice.bidder_platform_fee_cents || 0)),
+      bidderFee: money(Number(invoice.optional_gather_support_cents || 0)),
       processingFee: Number(invoice.processing_fee_cents || 0)
         ? `${money(Number(invoice.processing_fee_cents))} (paid by nonprofit)`
         : "$0.00",

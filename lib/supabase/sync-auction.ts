@@ -40,8 +40,8 @@ export async function syncCreatedAuctionToSupabase(input: SyncAuctionInput) {
     planning_notes: input.auction.planningNotes || null,
     planned_capabilities: input.auction.plannedCapabilities || { liveAuction: false, silentAuction: true, donationAppeal: false },
     live_session_status: input.auction.liveSessionStatus || 'not_started',
-    platform_fee_bps: 500,
-    organizer_fee_share_percent: input.auction.feePolicy.organizerPercent,
+    platform_fee_bps: 0,
+    organizer_fee_share_percent: 0,
     processing_fees_separate: true,
   }, { onConflict: 'id' });
   if (auctionError) throw auctionError;

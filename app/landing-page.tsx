@@ -19,7 +19,7 @@ const steps = [
   ['01', 'Organization', 'Add your nonprofit details and mission.'],
   ['02', 'Auction details', 'Set the name, dates, and shareable page link.'],
   ['03', 'Add items', 'List donated items or add Give Holidays experiences.'],
-  ['04', 'Payment & fees', 'Connect Stripe and choose how the capped 5% fee is allocated.'],
+  ['04', 'Payments & delivery', 'Connect Stripe and confirm how winners receive their items.'],
   ['05', 'Review & launch', 'Preview the bidder experience, then publish.'],
 ];
 
@@ -65,7 +65,7 @@ export function LandingPage() {
               Gather brings your branded auction page, mobile bidding, winner checkout, and risk-free Give Holidays travel experiences together in one focused platform.
             </p>
             <p className="mt-5 max-w-xl font-semibold text-[#244c3e]">
-              5% platform fee, capped at $100 per item. Your nonprofit keeps the rest.
+              No plans, platform commissions, or success fees. Your nonprofit keeps what it raises.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a href="/onboarding" className="inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-[#175b47] px-6 font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#104735]">
@@ -149,7 +149,7 @@ export function LandingPage() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <FeaturePoint icon={<LayoutTemplate/>} title="Your nonprofit, front and center" copy="Create one branded home for your mission, auction details, featured items, sponsors, and every auction you run." />
             <FeaturePoint icon={<Smartphone/>} title="Bidding built for any screen" copy="Supporters can browse before registering, place bids from their phones, set a maximum bid, and save items to a watchlist." />
-            <FeaturePoint icon={<WalletCards/>} title="A cleaner path from win to paid" copy="Combine a winner’s items into one invoice and show the capped platform fee and payment-processing fees separately." />
+            <FeaturePoint icon={<WalletCards/>} title="A cleaner path from win to paid" copy="Combine a winner’s items into one invoice, with processor costs disclosed separately and no Gather platform fee." />
             <FeaturePoint icon={<ShieldCheck/>} title="Travel without upfront inventory" copy="Give Holidays packages create a fulfillment obligation only after the auction closes and the winning bidder pays." />
           </div>
         </div>
@@ -188,17 +188,17 @@ export function LandingPage() {
           <div className="grid overflow-hidden rounded-[2rem] border border-[#dce5df] lg:grid-cols-[0.9fr_1.1fr]">
             <div className="bg-[#174c3b] p-8 text-white sm:p-12">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#bdd5c7]">Simple, predictable pricing</p>
-              <h2 className="mt-6 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">One fee. Capped at $100.</h2>
-              <p className="mt-5 text-lg leading-8 text-[#d8e7de]">5% of what you raise — and never more than $100 on any single item.</p>
+              <h2 className="mt-6 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">Free for nonprofit organizers.</h2>
+              <p className="mt-5 text-lg leading-8 text-[#d8e7de]">No monthly plan, platform commission, success fee, or percentage of what you raise.</p>
             </div>
             <div className="grid gap-7 bg-[#fbfcfb] p-8 sm:grid-cols-3 sm:p-12">
               <div className="sm:col-span-3">
-                <p className="leading-7 text-[#4f665c]">Gather charges a 5% platform fee on winning bids, capped at $100 per item. A $200 gift basket costs $10. A $5,000 trip to Venice costs $100. No setup fee, no monthly charge, and no surprise line items. Payment processing (2.9% + $0.30) is separate. Split the platform fee with winning bidders, pass it to them, or cover it yourself.</p>
-                <p className="mt-4 rounded-xl bg-[#eaf2ed] px-4 py-3 text-sm font-semibold leading-6 text-[#244c3e]">Other platforms take 5% with no cap — that’s $250 on a $5,000 item. We stop at $100.</p>
+                <p className="leading-7 text-[#4f665c]">Create, run, and close out an auction without paying Gather a subscription or platform fee. Payment-processor costs are separate and shown honestly wherever totals appear.</p>
+                <p className="mt-4 rounded-xl bg-[#eaf2ed] px-4 py-3 text-sm font-semibold leading-6 text-[#244c3e]">Supporters may optionally help keep Gather free. They can choose any amount, including $0.</p>
               </div>
-              <FeePoint icon={<BadgeDollarSign />} title="You choose who covers it" copy="The nonprofit can cover the 5%, pass it to winning bidders, or split it by a percentage you set." />
+              <FeePoint icon={<BadgeDollarSign />} title="Your organization pays $0" copy="Gather does not charge organizers or pass a required Gather fee to bidders." />
               <FeePoint icon={<CreditCard />} title="Processing fees stay separate" copy="Payment processing (2.9% + $0.30) is disclosed separately instead of being hidden inside Gather’s fee." />
-              <FeePoint icon={<Plane />} title="Travel pricing stays clear" copy="Any Give Holidays markup is included in the package price and identified separately from the capped platform fee." />
+              <FeePoint icon={<Plane />} title="Travel remains optional" copy="Give Holidays package pricing and terms are separate and are never required to use Gather." />
             </div>
           </div>
         </div>

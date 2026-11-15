@@ -10,15 +10,13 @@ export const defaultSponsorTiers = [
 
 export function coverageFlags(coverage: FeeCoverage) {
   return {
-    coversPlatform: coverage === "platform" || coverage === "both",
-    coversProcessing: coverage === "processing" || coverage === "both",
+    coversPlatform: false,
+    coversProcessing: coverage === "processing",
   };
 }
 
 export function coverageLabel(coverage: FeeCoverage) {
-  if (coverage === "platform") return "Gather platform fees";
-  if (coverage === "processing") return "eligible payment-processing fees";
-  return "Gather platform and eligible payment-processing fees";
+  return "eligible payment-processing costs";
 }
 
 export function sponsorRecognitionCopy(input: {
@@ -28,11 +26,7 @@ export function sponsorRecognitionCopy(input: {
   remainingCents: number;
 }) {
   if (input.remainingCents <= 0) return "";
-  if (input.coverage === "platform")
-    return `Thanks to ${input.sponsorName} for helping cover Gather platform fees for this event, allowing more proceeds to support our mission.`;
-  if (input.coverage === "processing")
-    return `Thanks to ${input.sponsorName} for helping cover eligible payment-processing expenses for this event.`;
-  return `${input.sponsorName} is generously contributing toward eligible event transaction fees, up to its sponsorship commitment.`;
+  return `Thanks to ${input.sponsorName} for helping cover eligible payment-processing expenses for this event.`;
 }
 
 export function sponsorshipBalance(input: {

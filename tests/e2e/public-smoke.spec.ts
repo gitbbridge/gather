@@ -10,7 +10,7 @@ test.describe("public launch surfaces", () => {
         name: "Raise more with an auction that’s easier to run.",
       }),
     ).toBeVisible();
-    await expect(page.getByText("5% platform fee, capped at $100 per item.")).toBeVisible();
+    await expect(page.getByText(/No plans, platform commissions, or success fees/)).toBeVisible();
 
     const travelLink = page.getByRole("link", { name: "About Give Holidays" });
     await expect(travelLink).toHaveAttribute("href", "/about/give-holidays");

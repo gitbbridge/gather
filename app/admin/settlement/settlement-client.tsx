@@ -49,8 +49,8 @@ export default function SettlementClient({ auctionId }: { auctionId: string }) {
   };
   const financial = [
     ['Gross auction proceeds', s.grossAuctionProceedsCents], ['Collected payments', s.collectedPaymentsCents], ['Outstanding winning bids', s.outstandingWinningBidsCents],
-    ['Failed payments', s.failedPaymentsCents], ['Refunds', s.refundsCents], ['Platform commission', s.platformCommissionCents],
-    ['Paid by bidders', s.bidderCommissionCents], ['Paid by nonprofit', s.nonprofitCommissionCents], ['Payment-processing fees', s.processingFeesCents],
+    ['Failed payments', s.failedPaymentsCents], ['Refunds', s.refundsCents], ['Gather platform fee', 0],
+    ['Payment-processing fees', s.processingFeesCents],
     ['Travel supplier costs', s.travelSupplierCostsCents], ['Give Holidays markup', s.travelMarkupCents], ['Net proceeds to nonprofit', s.netProceedsCents],
   ] as const;
   return <main className="min-h-screen bg-[#f8faf9] px-4 py-6 print:bg-white sm:px-7 lg:px-10">

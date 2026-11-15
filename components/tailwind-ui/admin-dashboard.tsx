@@ -463,7 +463,7 @@ export function AdminDashboard({
                 <ArrowUpRight size={15} />
               </Button>
               <p className="mt-3 text-xs text-muted-foreground">
-                Gather’s 5% platform fee is capped at $100 per item and remains separate from Stripe processing fees.
+                Gather is free for nonprofit organizers. Stripe processing costs are disclosed separately and are never Gather revenue.
               </p>
             </div>
           </div>

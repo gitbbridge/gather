@@ -520,13 +520,13 @@ export const emailTemplates: EmailTemplate[] = [
         ) +
         details([
           ["Winning bids", "{{hammerSubtotal}}"],
-          ["Your share of Gather’s capped 5% fee", "{{bidderFee}}"],
+          ["Support Gather (optional)", "{{bidderFee}}"],
           ["Total due", "{{totalDue}}"],
           ["Due date", "{{dueDate}}"],
         ]),
       cta: { label: "Pay securely", href: "{{checkoutUrl}}" },
       secondary:
-        "Stripe processing fees are disclosed separately and are not part of Gather’s 5% platform fee, which is capped at $100 per item.",
+        "Gather charges no platform fee. Optional Gather support may be $0. Payment-processor costs are disclosed separately.",
     },
     [
       "auctionName",
@@ -557,7 +557,7 @@ export const emailTemplates: EmailTemplate[] = [
           ["Bidder email", "{{bidderEmail}}"],
           ["Winning items", "{{itemSummary}}"],
           ["Winning bids", "{{hammerSubtotal}}"],
-          ["Your share of Gather’s capped 5% fee", "{{bidderFee}}"],
+          ["Support Gather (optional)", "{{bidderFee}}"],
           ["Payment-processing fee", "{{processingFee}}"],
           ["Total amount charged", "{{amountPaid}}"],
           ["Payment status", "{{paymentStatus}}"],

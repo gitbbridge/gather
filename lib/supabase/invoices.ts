@@ -38,6 +38,7 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
       currency: 'usd',
       hammer_subtotal_cents: draft.hammerSubtotalCents,
       bidder_platform_fee_cents: draft.bidderPlatformFeeCents,
+      optional_gather_support_cents: 0,
       give_holidays_wholesale_cost_cents: draft.giveHolidaysWholesaleCostCents,
       give_holidays_markup_cents: draft.giveHolidaysMarkupCents,
       total_due_cents: draft.totalDueCents,
@@ -79,7 +80,7 @@ export async function generateWinnerInvoices(auctionId: string, auction: Auction
         auctionId,
         templateId: 'invoice-ready',
         dedupeKey: `invoice-ready-${invoice.id}`,
-        values: { auctionName: auction.name, hammerSubtotal: money(draft.hammerSubtotalCents), bidderFee: money(draft.bidderPlatformFeeCents), totalDue: money(draft.totalDueCents), dueDate: dateTime(dueAt), checkoutUrl: `${origin}/my-wins` },
+        values: { auctionName: auction.name, hammerSubtotal: money(draft.hammerSubtotalCents), bidderFee: '$0.00', totalDue: money(draft.totalDueCents), dueDate: dateTime(dueAt), checkoutUrl: `${origin}/my-wins` },
       }),
     ]);
     try {

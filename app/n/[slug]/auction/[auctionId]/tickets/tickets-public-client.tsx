@@ -343,7 +343,7 @@ export default function TicketsPublicClient({
             )}
           </Button>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            Ticket sales do not use Gather’s 5% auction commission. Any
+            Gather charges no platform commission on ticket sales. Any
             payment-processing charges are disclosed separately before payment.
           </p>
         </aside>

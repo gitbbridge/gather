@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createAuction } from '../lib/auction.ts';
 import { buildWinnerInvoiceDrafts } from '../lib/invoices.ts';
 
-test('winner invoice combines closed items and adds only the bidder fee to checkout', () => {
+test('winner invoice combines closed items without a Gather platform fee', () => {
   const auction = createAuction('Auction', 'Nonprofit', { starts: 1, ends: 2, organizerPercent: 40, items: [
     { title: 'Dinner', value: 10_000 },
     { title: 'Maui getaway', value: 20_000, source: 'give-holidays', packageCode: 'MAUI' },
@@ -13,12 +13,12 @@ test('winner invoice combines closed items and adds only the bidder fee to check
   const invoices = buildWinnerInvoiceDrafts(auction, { [auction.items[1].id]: { wholesaleCostCents: 5_000, markupCents: 1_000 } }, 3);
   assert.equal(invoices.length, 1);
   assert.equal(invoices[0].hammerSubtotalCents, 30_000);
-  assert.equal(invoices[0].bidderPlatformFeeCents, 900);
-  assert.equal(invoices[0].totalDueCents, 30_900);
+  assert.equal(invoices[0].bidderPlatformFeeCents, 0);
+  assert.equal(invoices[0].totalDueCents, 30_000);
   assert.equal(invoices[0].giveHolidaysWholesaleCostCents, 5_000);
   assert.equal(invoices[0].giveHolidaysMarkupCents, 1_000);
-  assert.equal(invoices[0].applicationFeeCents, 7_500);
-  assert.equal(invoices[0].organizerGrossCents, 23_400);
+  assert.equal(invoices[0].applicationFeeCents, 6_000);
+  assert.equal(invoices[0].organizerGrossCents, 24_000);
 });
 
 test('invoice generation refuses an auction that is still open', () => {
@@ -26,7 +26,7 @@ test('invoice generation refuses an auction that is still open', () => {
   assert.throws(() => buildWinnerInvoiceDrafts(auction, {}, 50), /after every auction item closes/);
 });
 
-test('the $100 cap is applied to each item, not the combined invoice', () => {
+test('high-value items still produce a zero Gather platform fee', () => {
   const items = Array.from({ length: 2 }, (_, index) => ({
     title: `Premium item ${index + 1}`,
     value: 500_000,
@@ -39,6 +39,6 @@ test('the $100 cap is applied to each item, not the combined invoice', () => {
   }
   const [invoice] = buildWinnerInvoiceDrafts(auction, {}, 3);
   assert.equal(invoice.hammerSubtotalCents, 1_000_000);
-  assert.equal(invoice.bidderPlatformFeeCents, 20_000);
-  assert.equal(invoice.totalDueCents, 1_020_000);
+  assert.equal(invoice.bidderPlatformFeeCents, 0);
+  assert.equal(invoice.totalDueCents, 1_000_000);
 });

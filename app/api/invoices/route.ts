@@ -10,7 +10,7 @@ export async function GET() {
     const user = await getAppUser();
     if (!user) return json({ error: 'Sign in to view your wins.' }, 401);
     const { data, error } = await createSupabaseAdminClient().from('winner_invoices').select(`
-      id,status,currency,hammer_subtotal_cents,bidder_platform_fee_cents,total_due_cents,due_at,paid_at,created_at,
+      id,status,currency,hammer_subtotal_cents,optional_gather_support_cents,total_due_cents,due_at,paid_at,created_at,
       auctions(name,organization_id),
       winner_invoice_items(id,hammer_price_cents,bidder_fee_cents,
         auction_items(title,source,travel_package_snapshot),
@@ -26,7 +26,7 @@ export async function GET() {
         currency: invoice.currency,
         auctionName: auction?.name || 'Auction',
         hammerSubtotalCents: invoice.hammer_subtotal_cents,
-        bidderPlatformFeeCents: invoice.bidder_platform_fee_cents,
+        gatherSupportCents: invoice.optional_gather_support_cents || 0,
         totalDueCents: invoice.total_due_cents,
         dueAt: invoice.due_at,
         paidAt: invoice.paid_at,

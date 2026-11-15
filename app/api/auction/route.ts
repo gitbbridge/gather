@@ -130,8 +130,6 @@ const input = z.object({
   addressRequired: z.boolean().optional(),
   countryStateRequired: z.boolean().optional(),
   customQuestions: z.array(setupQuestion).max(12).optional(),
-  commissionPayer: z.enum(["organizer", "split", "bidder"]).optional(),
-  organizerShare: z.number().int().min(0).max(100).optional(),
   items: z.array(starterItem).max(25).optional(),
 });
 function db() {
@@ -395,12 +393,6 @@ export async function POST(req: Request) {
           { error: "The closing date must be after the opening date." },
           400,
         );
-      const organizerPercent =
-        x.commissionPayer === "bidder"
-          ? 0
-          : x.commissionPayer === "split"
-            ? (x.organizerShare ?? 50)
-            : 100;
       const eventType = x.eventType || "online_silent";
       if (eventType !== "online_silent" && (!x.venueName || !x.eventDate))
         return json({ error: "Add the venue and event date." }, 400);
@@ -415,7 +407,6 @@ export async function POST(req: Request) {
       const auction = createAuction(x.name, organization, {
         starts,
         ends,
-        organizerPercent,
         items: x.items,
         eventType,
         description: x.eventDescription,

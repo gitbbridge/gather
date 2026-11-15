@@ -7,7 +7,10 @@ import { rateLimitResponse, trustedMutationOrigin } from '@/lib/security/rate-li
 
 export const dynamic = 'force-dynamic';
 
-const input = z.object({ invoiceId: z.string().uuid() });
+const input = z.object({
+  invoiceId: z.string().uuid(),
+  gatherSupportCents: z.number().int().min(0).max(100_000).default(0),
+});
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
 export async function POST(request: Request) {
@@ -21,20 +24,21 @@ export async function POST(request: Request) {
     if (!parsed.success) return json({ error: 'Choose an invoice and try again.' }, 400);
     const client = createSupabaseAdminClient();
     const { data: invoice, error } = await client.from('winner_invoices').select(`
-      id,status,currency,total_due_cents,auction_id,payer_id,stripe_checkout_session_id,
+      id,status,currency,hammer_subtotal_cents,total_due_cents,optional_gather_support_cents,auction_id,payer_id,stripe_checkout_session_id,
       auctions(name,organization_id),
       winner_invoice_items(id,hammer_price_cents,platform_fee_cents,bidder_fee_cents,give_holidays_markup_cents,give_holidays_wholesale_cost_cents,auction_items(title,source,travel_package_id))
     `).eq('id', parsed.data.invoiceId).single();
     if (error || !invoice) return json({ error: 'Invoice not found.' }, 404);
     if (invoice.payer_id !== user.userId) return json({ error: 'Access denied.' }, 403);
     if (invoice.status === 'paid') return json({ error: 'This invoice is already paid.' }, 409);
-    if (invoice.status !== 'open' || invoice.total_due_cents <= 0) return json({ error: 'This invoice is not ready for payment.' }, 409);
+    if (invoice.status !== 'open' || invoice.hammer_subtotal_cents <= 0) return json({ error: 'This invoice is not ready for payment.' }, 409);
     const auction = Array.isArray(invoice.auctions) ? invoice.auctions[0] : invoice.auctions;
     if (!auction?.organization_id) return json({ error: 'The nonprofit payment account is unavailable.' }, 409);
     const connected = await paymentAccount(auction.organization_id);
     if (!connected || connected.status !== 'ready') return json({ error: 'The nonprofit must finish Stripe setup before winners can pay.' }, 409);
 
-    if (invoice.stripe_checkout_session_id) {
+    const gatherSupportCents = parsed.data.gatherSupportCents;
+    if (invoice.stripe_checkout_session_id && Number(invoice.optional_gather_support_cents || 0) === gatherSupportCents) {
       try {
         const existing = await stripe().checkout.sessions.retrieve(invoice.stripe_checkout_session_id, {}, { stripeAccount: connected.stripeAccountId });
         if (existing.status === 'open' && existing.url) return json({ url: existing.url });
@@ -53,31 +57,32 @@ export async function POST(request: Request) {
         return json({ error: 'A travel package on this invoice is no longer available. Contact the organizer before paying.' }, 409);
       }
     }
-    const bidderFeeCents = lines.reduce((sum, line) => sum + Number(line.bidder_fee_cents || 0), 0);
-    const applicationFeeCents = lines.reduce((sum, line) => sum + Number(line.platform_fee_cents || 0) + Number(line.give_holidays_markup_cents || 0) + Number(line.give_holidays_wholesale_cost_cents || 0), 0);
-    if (applicationFeeCents > invoice.total_due_cents) return json({ error: 'This invoice requires organizer review before payment.' }, 409);
+    const totalDueCents = Number(invoice.hammer_subtotal_cents) + gatherSupportCents;
+    const travelRetainedCents = lines.reduce((sum, line) => sum + Number(line.give_holidays_markup_cents || 0) + Number(line.give_holidays_wholesale_cost_cents || 0), 0);
+    const applicationFeeCents = travelRetainedCents + gatherSupportCents;
+    if (applicationFeeCents > totalDueCents) return json({ error: 'This invoice requires organizer review before payment.' }, 409);
     const lineItems = lines.map(line => {
       const item = Array.isArray(line.auction_items) ? line.auction_items[0] : line.auction_items;
       return { price_data: { currency: invoice.currency, unit_amount: line.hammer_price_cents, product_data: { name: item?.title || 'Winning auction item' } }, quantity: 1 };
     });
-    if (bidderFeeCents) lineItems.push({ price_data: { currency: invoice.currency, unit_amount: bidderFeeCents, product_data: { name: 'Gather platform fee' } }, quantity: 1 });
+    if (gatherSupportCents) lineItems.push({ price_data: { currency: invoice.currency, unit_amount: gatherSupportCents, product_data: { name: 'Support Gather (optional)' } }, quantity: 1 });
     const session = await stripe().checkout.sessions.create({
       mode: 'payment',
       customer_email: user.email,
       line_items: lineItems,
       payment_intent_data: {
         application_fee_amount: applicationFeeCents,
-        metadata: { gather_invoice_id: invoice.id, gather_auction_id: invoice.auction_id },
+        metadata: { gather_invoice_id: invoice.id, gather_auction_id: invoice.auction_id, gather_support_cents: String(gatherSupportCents), gather_platform_fee_cents: '0' },
       },
-      metadata: { gather_invoice_id: invoice.id, gather_auction_id: invoice.auction_id, gather_payer_id: user.userId },
+      metadata: { gather_invoice_id: invoice.id, gather_auction_id: invoice.auction_id, gather_payer_id: user.userId, gather_support_cents: String(gatherSupportCents), gather_platform_fee_cents: '0' },
       success_url: `${origin}/my-wins?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/my-wins?payment=cancelled`,
-      custom_text: { submit: { message: 'Stripe processing fees are deducted separately from nonprofit proceeds and are not part of Gather’s 5% platform fee, capped at $100 per item.' } },
+      custom_text: { submit: { message: 'Gather is free for nonprofits. Any optional Gather support is separate from nonprofit proceeds. Payment-processor costs are disclosed separately.' } },
     }, {
       stripeAccount: connected.stripeAccountId,
       idempotencyKey: `gather-invoice-${invoice.id}-${Math.floor(Date.now() / 3_600_000)}`,
     });
-    await client.from('winner_invoices').update({ stripe_checkout_session_id: session.id }).eq('id', invoice.id);
+    await client.from('winner_invoices').update({ stripe_checkout_session_id: session.id, optional_gather_support_cents: gatherSupportCents, bidder_platform_fee_cents: 0, total_due_cents: totalDueCents }).eq('id', invoice.id);
     if (!session.url) return json({ error: 'Stripe did not return a checkout link.' }, 500);
     return json({ url: session.url });
   } catch (error) {
