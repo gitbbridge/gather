@@ -12,6 +12,11 @@ export default async function MessagesPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  await requireAppUser("/messages");
+  const query = new URLSearchParams(
+    Object.entries(params).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  ).toString();
+  await requireAppUser(`/messages${query ? `?${query}` : ""}`);
   return <MessagesClient params={params} />;
 }
