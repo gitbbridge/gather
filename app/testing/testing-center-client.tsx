@@ -7,6 +7,7 @@ import {
   Bug,
   CheckCircle2,
   ClipboardList,
+  DatabaseZap,
   ExternalLink,
   Gavel,
   HeartHandshake,
@@ -131,6 +132,8 @@ export default function TestingCenterClient() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState("");
   const [filters, setFilters] = useState({ status: "", priority: "", role: "" });
   const { status: statusFilter, priority: priorityFilter, role: roleFilter } = filters;
 
@@ -189,8 +192,22 @@ export default function TestingCenterClient() {
     if (response.ok) await loadIssues();
   };
 
+  const seedOrganizerFoundation = async () => {
+    setSeeding(true); setSeedMessage("");
+    const response = await fetch("/api/testing/seed", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "seed-organizer-foundation" }) });
+    const result = await response.json() as { error?: string; organizations?: { name: string }[]; syncWarnings?: string[] };
+    setSeeding(false);
+    if (!response.ok) { setSeedMessage(result.error || "Unable to seed the organizer workspace."); return; }
+    const warning = result.syncWarnings?.length ? ` ${result.syncWarnings.length} optional Supabase records need review.` : "";
+    setSeedMessage(`${result.organizations?.length || 0} organizations and their reusable auction records are ready.${warning}`);
+  };
+
   return (
     <div className="space-y-8">
+      <section className="rounded-3xl border border-[#cfe0d6] bg-[#edf5f0] p-6 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-8">
+        <div className="flex items-start gap-3"><div className="rounded-xl bg-white p-2.5 text-[#175b47]"><DatabaseZap className="h-5 w-5" /></div><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#56806d]">Reusable demo data</p><h2 className="mt-1 text-xl font-semibold text-[#173d31]">Organizer foundation seed</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-[#567066]">Creates or refreshes two nonprofits, four auctions, supporters, bidding activity, payments, tags, and notes. It is safe to run again and never writes to production.</p>{seedMessage && <p role="status" className="mt-2 text-sm font-semibold text-[#175b47]">{seedMessage}</p>}</div></div>
+        <button type="button" disabled={seeding} onClick={() => void seedOrganizerFoundation()} className="mt-5 min-h-11 shrink-0 rounded-full bg-[#175b47] px-5 font-semibold text-white hover:bg-[#104737] disabled:opacity-60 sm:mt-0">{seeding ? "Seeding…" : "Seed organizer workspace"}</button>
+      </section>
       <section className="overflow-hidden rounded-3xl border border-[#dce5df] bg-white shadow-sm">
         <div className="border-b border-[#e4ebe6] bg-gradient-to-br from-white to-[#edf5f0] px-6 py-8 sm:px-9">
           <div className="flex flex-wrap items-center justify-between gap-4">

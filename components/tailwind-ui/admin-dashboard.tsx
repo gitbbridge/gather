@@ -155,7 +155,7 @@ export function AdminDashboard({
             Keep {auction.name} moving forward.
           </p>
         </div>
-        <div className="hidden w-auto flex-wrap gap-2 sm:flex">
+        <div className="hidden">
           <Button variant="outline" onClick={onHomepage} disabled={!nonprofit}>
             <LayoutTemplate size={16} />
             Auction page
@@ -205,7 +205,7 @@ export function AdminDashboard({
             New auction
           </Button>
         </div>
-        <div id="mobile-tools" className="grid w-full grid-cols-2 gap-2 sm:hidden">
+        <div id="mobile-tools" className="hidden">
           <Button variant="outline" onClick={onHomepage} disabled={!nonprofit} className="min-h-12 justify-start">
             <LayoutTemplate size={17} /> Auction page
           </Button>

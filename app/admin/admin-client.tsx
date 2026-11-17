@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AdminDashboard } from "@/components/tailwind-ui/admin-dashboard";
 import { money } from "@/lib/auction";
 import { toast } from "sonner";
+import { OrganizerShell } from "@/components/organizer-shell";
 
 type AuctionSummary = {
   id: string;
@@ -102,7 +103,7 @@ export default function AdminClient() {
       setConnecting(false);
     }
   };
-  return (
+  const dashboard = (
     <AdminDashboard
       auction={{
         name: a.name,
@@ -195,5 +196,17 @@ export default function AdminClient() {
         )
       }
     />
+  );
+  if (!data.nonprofit || !data.id) return dashboard;
+  return (
+    <OrganizerShell
+      auctionId={data.id}
+      auctionName={a.name}
+      organizationId={data.nonprofit.id}
+      organizationName={data.nonprofit.name}
+      nonprofitSlug={data.nonprofit.slug}
+    >
+      {dashboard}
+    </OrganizerShell>
   );
 }
