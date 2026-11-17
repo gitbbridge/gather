@@ -11,6 +11,7 @@ export type SettlementInvoice = {
   status: string;
   lastPaymentStatus?: string | null;
   totalDueCents: number;
+  optionalGatherSupportCents: number;
   processingFeeCents: number;
   stripePaymentIntentId?: string | null;
   receiptNumber?: string | null;
@@ -63,6 +64,7 @@ export type SettlementSummary = {
   outstandingWinningBidsCents: number;
   failedPaymentsCents: number;
   refundsCents: number;
+  optionalGatherSupportCents: number;
   platformCommissionCents: number;
   bidderCommissionCents: number;
   nonprofitCommissionCents: number;
@@ -158,6 +160,7 @@ export function buildEventSettlement(auctionId: string, auction: Auction, invoic
   const sum = (key: keyof SettlementLedgerRow) => ledger.reduce((total, row) => total + Number(row[key] || 0), 0);
   const gross = sum('winningBidCents');
   const collected = invoices.reduce((total, invoice) => ['Paid', 'Partially Refunded', 'Refunded'].includes(paymentStatus(invoice)) ? total + Math.max(0, invoice.totalDueCents - invoice.refundCents) : total, 0);
+  const optionalGatherSupport = invoices.reduce((total, invoice) => ['Paid', 'Partially Refunded'].includes(paymentStatus(invoice)) ? total + invoice.optionalGatherSupportCents : total, 0);
   const outstanding = ledger.filter(row => row.paymentStatus === 'Unpaid').reduce((total, row) => total + row.winningBidCents, 0);
   const failed = ledger.filter(row => row.paymentStatus === 'Failed').reduce((total, row) => total + row.winningBidCents, 0);
   const summary: SettlementSummary = {
@@ -166,6 +169,7 @@ export function buildEventSettlement(auctionId: string, auction: Auction, invoic
     outstandingWinningBidsCents: outstanding,
     failedPaymentsCents: failed,
     refundsCents: sum('refundCents'),
+    optionalGatherSupportCents: optionalGatherSupport,
     platformCommissionCents: sum('bidderCommissionCents') + sum('nonprofitCommissionCents'),
     bidderCommissionCents: sum('bidderCommissionCents'),
     nonprofitCommissionCents: sum('nonprofitCommissionCents'),
@@ -191,14 +195,13 @@ export function settlementCsv(settlement: EventSettlement) {
     ['Collected Payments', settlement.summary.collectedPaymentsCents / 100],
     ['Outstanding Winning Bids', settlement.summary.outstandingWinningBidsCents / 100],
     ['Failed Payments', settlement.summary.failedPaymentsCents / 100], ['Refunds', settlement.summary.refundsCents / 100],
-    ['Platform Commission', settlement.summary.platformCommissionCents / 100], ['Bidder-Paid Commission', settlement.summary.bidderCommissionCents / 100],
-    ['Nonprofit-Paid Commission', settlement.summary.nonprofitCommissionCents / 100], ['Processing Fees', settlement.summary.processingFeesCents / 100],
+    ['Optional Gather Support', settlement.summary.optionalGatherSupportCents / 100], ['Processing Fees', settlement.summary.processingFeesCents / 100],
     ['Travel Supplier Costs', settlement.summary.travelSupplierCostsCents / 100], ['Give Holidays Markup', settlement.summary.travelMarkupCents / 100],
     ['Net Nonprofit Proceeds', settlement.summary.netProceedsCents / 100], ['Listed Items', settlement.summary.listedItems],
     ['Sold Items', settlement.summary.soldItems], ['Paid Winners', settlement.summary.paidWinners],
     ['Average Winning Bid', settlement.summary.averageWinningBidCents / 100], ['Sell-Through Percent', settlement.summary.sellThroughPercent], [],
-    ['Item Name','Category','Winning Bidder','Bidder Email','Winning Bid','Commission Configuration','Bidder Commission','Nonprofit Commission','Processing Fee','Travel Supplier Cost','Give Holidays Markup','Refund','Total Paid By Bidder','Payment Status','Fulfillment Status','Transaction ID','Receipt ID','Net Nonprofit Proceeds'],
-    ...settlement.ledger.map(row => [row.itemName,row.category,row.bidderName,row.bidderEmail,row.winningBidCents/100,row.commissionConfiguration,row.bidderCommissionCents/100,row.nonprofitCommissionCents/100,row.processingFeeCents/100,row.travelSupplierCostCents/100,row.travelMarkupCents/100,row.refundCents/100,row.totalPaidByBidderCents/100,row.paymentStatus,row.fulfillmentStatus,row.transactionId,row.receiptId,row.netProceedsCents/100]),
+    ['Item Name','Category','Winning Bidder','Bidder Email','Winning Bid','Processing Fee','Travel Supplier Cost','Give Holidays Markup','Refund','Total Paid By Bidder','Payment Status','Fulfillment Status','Transaction ID','Receipt ID','Net Nonprofit Proceeds'],
+    ...settlement.ledger.map(row => [row.itemName,row.category,row.bidderName,row.bidderEmail,row.winningBidCents/100,row.processingFeeCents/100,row.travelSupplierCostCents/100,row.travelMarkupCents/100,row.refundCents/100,row.totalPaidByBidderCents/100,row.paymentStatus,row.fulfillmentStatus,row.transactionId,row.receiptId,row.netProceedsCents/100]),
   ];
   return rows.map(row => row.map(quote).join(',')).join('\r\n');
 }

@@ -7,7 +7,7 @@ const first = <T>(value: T | T[] | null | undefined): T | null => Array.isArray(
 export async function loadEventSettlement(auctionId: string, auction: Auction) {
   const client = createSupabaseAdminClient();
   const { data, error } = await client.from('winner_invoices').select(`
-    id,payer_id,status,last_payment_status,total_due_cents,processing_fee_cents,
+    id,payer_id,status,last_payment_status,total_due_cents,optional_gather_support_cents,processing_fee_cents,
     stripe_payment_intent_id,receipt_number,paid_at,
     payment_refunds(amount_cents,status),
     winner_invoice_items(
@@ -37,6 +37,7 @@ export async function loadEventSettlement(auctionId: string, auction: Auction) {
       status: invoice.status,
       lastPaymentStatus: invoice.last_payment_status,
       totalDueCents: Number(invoice.total_due_cents || 0),
+      optionalGatherSupportCents: Number(invoice.optional_gather_support_cents || 0),
       processingFeeCents: Number(invoice.processing_fee_cents || 0),
       stripePaymentIntentId: invoice.stripe_payment_intent_id,
       receiptNumber: invoice.receipt_number,

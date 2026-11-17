@@ -112,7 +112,7 @@ export async function sendInvoiceReceipt(
         )
         .join("; "),
       hammerSubtotal: money(Number(invoice.hammer_subtotal_cents || 0)),
-      bidderFee: money(Number(invoice.optional_gather_support_cents || 0)),
+      gatherSupport: money(Number(invoice.optional_gather_support_cents || 0)),
       processingFee: Number(invoice.processing_fee_cents || 0)
         ? `${money(Number(invoice.processing_fee_cents))} (paid by nonprofit)`
         : "$0.00",

@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       custom_text: { submit: { message: 'Gather is free for nonprofits. Any optional Gather support is separate from nonprofit proceeds. Payment-processor costs are disclosed separately.' } },
     }, {
       stripeAccount: connected.stripeAccountId,
-      idempotencyKey: `gather-invoice-${invoice.id}-${Math.floor(Date.now() / 3_600_000)}`,
+      idempotencyKey: `gather-invoice-${invoice.id}-support-${gatherSupportCents}-${Math.floor(Date.now() / 3_600_000)}`,
     });
     await client.from('winner_invoices').update({ stripe_checkout_session_id: session.id, optional_gather_support_cents: gatherSupportCents, bidder_platform_fee_cents: 0, total_due_cents: totalDueCents }).eq('id', invoice.id);
     if (!session.url) return json({ error: 'Stripe did not return a checkout link.' }, 500);
