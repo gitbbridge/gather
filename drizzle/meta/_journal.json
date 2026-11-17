@@ -57,6 +57,13 @@
       "when": 1794394966659,
       "tag": "0007_gifted_greymalkin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794923573151,
+      "tag": "0008_sloppy_tattoo",
+      "breakpoints": true
     }
   ]
 }
