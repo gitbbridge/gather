@@ -205,8 +205,19 @@ async function seedSupabase(input: {
 
 export async function POST(request: Request) {
   const access = await sandboxAccess();
-  if (!access.allowed || !access.user) return sandboxAccessError(access.reason);
-  if (request.headers.get("origin") !== new URL(request.url).origin)
+  const configuredSeedToken = process.env.SANDBOX_SEED_TOKEN?.trim();
+  const suppliedSeedToken = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  const tokenAuthorized = process.env.GATHER_ENVIRONMENT === "staging"
+    && Boolean(configuredSeedToken)
+    && suppliedSeedToken === configuredSeedToken;
+  const ownerId = access.allowed && access.user
+    ? access.user.userId
+    : tokenAuthorized
+      ? process.env.SANDBOX_SEED_OWNER_ID?.trim()
+      : undefined;
+
+  if (!ownerId) return sandboxAccessError(access.reason);
+  if (!tokenAuthorized && request.headers.get("origin") !== new URL(request.url).origin)
     return Response.json({ error: "Invalid request origin." }, { status: 403 });
   const body = await request.json().catch(() => null) as { action?: string } | null;
   if (body?.action !== "seed-organizer-foundation")
@@ -234,8 +245,8 @@ export async function POST(request: Request) {
 
   const syncErrors: string[] = [];
   for (const organization of organizations) {
-    await upsertD1Organization({ ...organization, owner: access.user.userId });
-    syncErrors.push(...await seedSupabase({ organizationId: organization.id, ownerId: access.user.userId, slug: organization.slug, auctions: organization.auctions }));
+    await upsertD1Organization({ ...organization, owner: ownerId });
+    syncErrors.push(...await seedSupabase({ organizationId: organization.id, ownerId, slug: organization.slug, auctions: organization.auctions }));
   }
   return Response.json({
     ok: true,
