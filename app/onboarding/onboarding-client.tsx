@@ -17,6 +17,7 @@ type Item = { id: string; title: string; value: string; source?: 'custom' | 'giv
 type SetupQuestion = { id: string; label: string; scope: 'bidder' | 'item'; required: boolean };
 type EventType = 'online_silent' | 'live' | 'hybrid';
 type TravelPackage = { id: string; destination: string; region: string; code: string; tone: string };
+type LaunchIssue = { field: string; message: string; step: number };
 const travelPackages: TravelPackage[] = [
   { id: 'cabo-san-lucas', destination: 'Cabo San Lucas', region: 'Mexico', code: 'CABO', tone: 'linear-gradient(135deg, #d68054 0%, #f2c37d 100%)' },
   { id: 'costa-rica', destination: 'Costa Rica', region: 'Central America', code: 'CR', tone: 'linear-gradient(135deg, #2e7259 0%, #8dbb82 100%)' },
@@ -46,6 +47,7 @@ export default function OnboardingClient({ authenticatedEmail }: { authenticated
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [launchIssues, setLaunchIssues] = useState<LaunchIssue[]>([]);
   const [auctionId, setAuctionId] = useState('');
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'desktop'>('mobile');
 
@@ -66,7 +68,7 @@ export default function OnboardingClient({ authenticatedEmail }: { authenticated
 
   const update = (changes: Partial<Draft>) => setDraft(current => ({ ...current, ...changes }));
   const next = () => {
-    setError('');
+    setError(''); setLaunchIssues([]);
     if (step === 0 && (!draft.organization.trim() || !draft.contactName.trim())) return setError('Add your organization and name to continue.');
     if (step === 1 && !draft.auctionName.trim()) return setError('Give your event a name to continue.');
     if (step === 1 && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pageSlug(draft))) return setError('Choose a shareable auction link using letters, numbers, and single hyphens.');
@@ -79,14 +81,17 @@ export default function OnboardingClient({ authenticatedEmail }: { authenticated
     setStep(current => Math.min(current + 1, 4));
   };
   const launch = async () => {
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setLaunchIssues([]);
     try {
       const response = await fetch('/api/auction', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'create', key: crypto.randomUUID(), organization: draft.organization.trim(), nonprofitSlug: pageSlug(draft), name: draft.auctionName.trim(), organizationContactEmail: draft.organizationContactEmail.trim(), brandLogoUrl: draft.brandLogoUrl.trim(), brandBannerUrl: draft.brandBannerUrl.trim(), brandColor: draft.brandColor, eventType: draft.eventType, eventDescription: draft.description.trim(), timezone: draft.timezone, openAt: draft.eventType === 'live' ? undefined : zonedDateTimeIso(draft.auctionDate, draft.timezone), closeAt: draft.eventType === 'live' ? undefined : zonedDateTimeIso(draft.closeDate, draft.timezone), eventDate: draft.eventDate || undefined, eventTime: draft.eventTime || undefined, venueName: draft.venueName.trim() || undefined, venueAddress: draft.venueAddress.trim() || undefined, planningNotes: draft.planningNotes.trim() || undefined, plannedLiveAuction: draft.plannedLiveAuction, plannedSilentAuction: draft.plannedSilentAuction, plannedDonationAppeal: draft.plannedDonationAppeal, pickupEnabled: draft.pickupEnabled, pickupAddress: draft.pickupAddress.trim(), pickupInstructions: draft.pickupInstructions.trim(), shippingEnabled: draft.shippingEnabled, shippingFeeCents: Math.round((Number(draft.shippingFee) || 0) * 100), phoneRequired: draft.phoneRequired, addressRequired: draft.addressRequired, countryStateRequired: draft.countryStateRequired, customQuestions: draft.customQuestions.filter(question => question.label.trim()).map(question => ({ ...question, label: question.label.trim() })), items: draft.items.map(item => ({ title: item.title.trim(), value: Math.round((Number(item.value) || 0) * 100), source: item.source, packageCode: item.packageCode, category: item.category, description: item.description.trim(), donor: item.donor.trim(), image: item.image.trim(), start: Math.round((Number(item.start) || 0) * 100) || undefined, increment: Math.round((Number(item.increment) || 0) * 100) || undefined, buyNow: Math.round((Number(item.buyNow) || 0) * 100), taxable: item.taxable, taxRateBps: Math.round((Number(item.taxRate) || 0) * 100) })) }),
       });
-      const data = await response.json() as { id?: string; error?: string };
-      if (!response.ok || !data.id) throw Error(data.error || 'Unable to create your fundraiser.');
+      const data = await response.json() as { id?: string; error?: string; issues?: LaunchIssue[] };
+      if (!response.ok || !data.id) {
+        if (data.issues?.length) setLaunchIssues(data.issues);
+        throw Error(data.error || 'Unable to create your fundraiser.');
+      }
       setAuctionId(data.id);
       window.localStorage.removeItem(storageKey);
     } catch (cause) {
@@ -112,8 +117,8 @@ export default function OnboardingClient({ authenticatedEmail }: { authenticated
         {step === 2 && <Items eventType={draft.eventType} items={draft.items} addItem={addItem} editItem={editItem} removeItem={removeItem} toggleTravelPackage={toggleTravelPackage}/>}
         {step === 3 && <Payment draft={draft} update={update}/>}
         {step === 4 && <Review draft={draft}/>}
-        {error && <p role="alert" className="mt-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-        <footer className="mt-9 flex items-center justify-between gap-4 border-t pt-6"><div>{step > 0 && <Button type="button" variant="ghost" onClick={() => { setError(''); setStep(current => current - 1); }}><ArrowLeft size={16}/>Back</Button>}</div>{step < 4 ? <Button type="button" className="h-11 px-5" onClick={next}>Continue <ArrowRight size={16}/></Button> : <Button type="button" className="h-11 px-5" disabled={busy} onClick={launch}>{busy ? 'Launching…' : 'Launch fundraiser'} <ArrowRight size={16}/></Button>}</footer>
+        {error && <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-800"><p className="font-semibold">{error}</p>{launchIssues.length > 0 && <><p className="mt-1 text-xs text-red-700">Select an item below to return to the correct setup step and fix it.</p><ul className="mt-3 space-y-2">{launchIssues.map((issue, index) => <li key={`${issue.field}-${index}`}><button type="button" onClick={() => { setStep(Math.max(0, Math.min(4, issue.step))); setError(''); }} className="flex w-full items-start justify-between gap-3 rounded-lg border border-red-200 bg-white px-3 py-2 text-left font-medium hover:bg-red-50"><span>{issue.message}</span><span className="shrink-0 text-xs font-semibold">Step {issue.step + 1} →</span></button></li>)}</ul></>}</div>}
+        <footer className="mt-9 flex items-center justify-between gap-4 border-t pt-6"><div>{step > 0 && <Button type="button" variant="ghost" onClick={() => { setError(''); setLaunchIssues([]); setStep(current => current - 1); }}><ArrowLeft size={16}/>Back</Button>}</div>{step < 4 ? <Button type="button" className="h-11 px-5" onClick={next}>Continue <ArrowRight size={16}/></Button> : <Button type="button" className="h-11 px-5" disabled={busy} onClick={launch}>{busy ? 'Launching…' : 'Launch fundraiser'} <ArrowRight size={16}/></Button>}</footer>
       </>}
     </section>{!auctionId && <aside className="sticky top-5 hidden overflow-hidden rounded-2xl border bg-white shadow-sm xl:block"><div className="flex items-center justify-between border-b px-4 py-3"><div><p className="text-sm font-semibold">Live preview</p><p className="text-xs text-muted-foreground">Updates as you type</p></div><div className="flex rounded-lg bg-[#f1f5f2] p-1"><PreviewButton active={previewDevice === 'mobile'} label="Mobile" onClick={() => setPreviewDevice('mobile')}><Smartphone size={15}/></PreviewButton><PreviewButton active={previewDevice === 'desktop'} label="Desktop" onClick={() => setPreviewDevice('desktop')}><Monitor size={15}/></PreviewButton></div></div><AuctionPreview draft={draft} device={previewDevice}/><p className="border-t px-4 py-3 text-center text-xs text-muted-foreground">Everything can be edited later.</p></aside>}</div><p className="mt-6 text-center text-xs text-muted-foreground">Simple setup first. Detailed controls appear only when you need them.</p>
   </div></main>;

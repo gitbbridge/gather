@@ -132,6 +132,34 @@ const input = z.object({
   customQuestions: z.array(setupQuestion).max(12).optional(),
   items: z.array(starterItem).max(25).optional(),
 });
+type ValidationIssue = { field: string; message: string; step: number };
+function validationIssues(error: z.ZodError): ValidationIssue[] {
+  const labels: Record<string, string> = {
+    organization: "Organization name", nonprofitSlug: "Shareable event link", name: "Event name",
+    organizationContactEmail: "Organization contact email", brandLogoUrl: "Logo image URL", brandBannerUrl: "Banner image URL",
+    eventDescription: "Event description", timezone: "Time zone", eventDate: "Event date", eventTime: "Event time",
+    venueName: "Venue name", venueAddress: "Venue address", pickupAddress: "Pickup address",
+    pickupInstructions: "Pickup instructions", shippingFeeCents: "Shipping fee", customQuestions: "Custom questions",
+  };
+  const stepFor = (field: string) => field === "organization" || field.startsWith("brand") || field === "organizationContactEmail" ? 0
+    : field === "name" || field === "nonprofitSlug" || field.startsWith("event") || field === "timezone" || field.startsWith("venue") ? 1
+      : field === "items" ? 2 : ["pickupAddress", "pickupInstructions", "shippingFeeCents", "customQuestions"].includes(field) ? 3 : 4;
+  const result = error.issues.map((issue) => {
+    const root = String(issue.path[0] || "information");
+    const itemIndex = root === "items" && typeof issue.path[1] === "number" ? Number(issue.path[1]) + 1 : null;
+    const itemField = itemIndex ? String(issue.path[2] || "item") : "";
+    const label = itemIndex ? `Item ${itemIndex} ${({ title: "name", value: "fair market value", image: "image URL", start: "starting bid", increment: "bid increment", buyNow: "Buy Now price", taxRateBps: "tax rate" } as Record<string, string>)[itemField] || itemField}` : labels[root] || root.replace(/([A-Z])/g, " $1").replace(/^./, letter => letter.toUpperCase());
+    let message = `${label}: ${issue.message}`;
+    if ((itemField === "start" || itemField === "increment" || root === "value") && issue.code === "too_small") message = `${label} must be at least $1.00.`;
+    else if ((root === "brandLogoUrl" || root === "brandBannerUrl" || itemField === "image") && issue.code === "invalid_format") message = `${label} must be a complete HTTPS image address.`;
+    else if (root === "organizationContactEmail") message = "Enter a valid organization contact email, or leave it blank.";
+    else if (root === "nonprofitSlug") message = "The shareable event link must be 3–48 characters using lowercase letters, numbers, and single hyphens.";
+    else if (itemField === "title") message = `${label} is required.`;
+    else if (issue.code === "too_big") message = `${label} is longer or larger than allowed.`;
+    return { field: issue.path.join("."), message, step: stepFor(root) };
+  });
+  return result.filter((issue, index) => result.findIndex(other => other.field === issue.field && other.message === issue.message) === index).slice(0, 12);
+}
 function db() {
   if (!env.DB) throw Error("Database unavailable");
   return env.DB;
@@ -308,8 +336,10 @@ export async function POST(req: Request) {
     const raw = await req.text();
     if (raw.length > 64000) return json({ error: "Request too large." }, 413);
     const parsed = input.safeParse(JSON.parse(raw));
-    if (!parsed.success)
-      return json({ error: "Check the information and try again." }, 400);
+    if (!parsed.success) {
+      const issues = validationIssues(parsed.error);
+      return json({ error: issues.length === 1 ? "One detail needs your attention before launch." : `${issues.length} details need your attention before launch.`, issues }, 400);
+    }
     const x = parsed.data;
     if (x.action === "create") {
       if (!(await canCreateOrganization(user)))
