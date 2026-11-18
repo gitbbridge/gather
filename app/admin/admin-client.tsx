@@ -120,17 +120,6 @@ export default function AdminClient() {
             ? `${Math.ceil((a.ends - now) / 86400000)} days remaining`
             : "Auction closed",
       }}
-      previousAuctions={(data.list || [])
-        .filter((auction) => auction.id !== data.id)
-        .map((auction) => ({
-          ...auction,
-          total: money(auction.total),
-          endsLabel: new Date(auction.ends).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-        }))}
       nonprofit={data.nonprofit}
       payment={payment}
       connectingPayments={connecting}
@@ -183,18 +172,6 @@ export default function AdminClient() {
         )
       }
       onConnectPayments={connectPayments}
-      onOpenAuction={(auctionId) =>
-        window.location.assign(
-          `/admin?auction=${encodeURIComponent(auctionId)}`,
-        )
-      }
-      onViewAuction={(auctionId) =>
-        window.open(
-          `/?auction=${encodeURIComponent(auctionId)}`,
-          "_blank",
-          "noopener,noreferrer",
-        )
-      }
     />
   );
   if (!data.nonprofit || !data.id) return dashboard;
