@@ -22,6 +22,7 @@
     "email:sync:supabase": "node --env-file=.env --env-file=.env.local --experimental-strip-types scripts/sync-supabase-email-templates.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1171.0",
     "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.7.1",
     "@shadcn/react": "^0.3.0",
