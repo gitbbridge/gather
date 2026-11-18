@@ -64,6 +64,13 @@
       "when": 1794923573151,
       "tag": "0008_sloppy_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794928061388,
+      "tag": "0009_curly_bloodstrike",
+      "breakpoints": true
     }
   ]
 }

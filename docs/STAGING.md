@@ -71,3 +71,6 @@ Do not run winner checkout, send customer messages, or move travel fulfillment b
 - Confirm production `/testing` is 404 and production has no TEST MODE banner.
 
 No production deployment, database migration, DNS change, or Git push is part of this setup document.
+# Module Planner GitHub integration
+
+The admin-only Module Planner reads the official `gitbbridge/gather` repository through GitHub's REST API. Public repository synchronization works without credentials but is subject to GitHub's lower anonymous rate limit. For reliable sandbox use, set `GITHUB_READ_TOKEN` only in the sandbox hosting environment. The token must be restricted to this repository with **Metadata: read**, **Contents: read**, **Pull requests: read**, and **Issues: read**. The application never requests or performs repository writes.
