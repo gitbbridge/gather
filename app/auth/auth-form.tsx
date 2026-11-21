@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,13 +22,13 @@ export function AuthForm({
   initialMode = "signin",
   initialMessage = "",
   supabaseConfig,
-  sandboxAutoLogin,
+  preventCredentialRetention = false,
 }: {
   returnTo: string;
   initialMode?: "signin" | "signup" | "forgot";
   initialMessage?: string;
   supabaseConfig: SupabaseBrowserConfig;
-  sandboxAutoLogin?: { email: string; password: string };
+  preventCredentialRetention?: boolean;
 }) {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">(initialMode);
   const [busy, setBusy] = useState(false);
@@ -41,32 +41,6 @@ export function AuthForm({
           ? "organizer"
           : "supporter",
   );
-  const autoLoginStarted = useRef(false);
-
-  useEffect(() => {
-    if (!sandboxAutoLogin || autoLoginStarted.current) return;
-    autoLoginStarted.current = true;
-    setBusy(true);
-    setMessage("Opening the sandbox demo…");
-    const supabase = createSupabaseBrowserClient(supabaseConfig);
-    void supabase.auth
-      .signInWithPassword(sandboxAutoLogin)
-      .then(({ error }) => {
-        if (error) throw error;
-        window.location.assign(
-          `/auth/complete?return_to=${encodeURIComponent(returnTo)}`,
-        );
-      })
-      .catch((reason: unknown) => {
-        setMessage(
-          reason instanceof Error
-            ? `Automatic sandbox access failed: ${reason.message}`
-            : "Automatic sandbox access failed. Use a demo account below.",
-        );
-        setBusy(false);
-      });
-  }, [returnTo, sandboxAutoLogin, supabaseConfig]);
-
   useEffect(() => {
     function useDemoAccount(event: Event) {
       const detail = (event as CustomEvent<{ email?: string; password?: string }>).detail;
@@ -201,7 +175,7 @@ export function AuthForm({
           </button>
         </div>
       )}
-      <form className="mt-6 space-y-4" onSubmit={submit}>
+      <form className="mt-6 space-y-4" onSubmit={submit} autoComplete={preventCredentialRetention ? "off" : "on"}>
         {mode === "signup" && (
           <>
             <fieldset>
@@ -256,7 +230,8 @@ export function AuthForm({
             className="mt-2 h-12"
             name="email"
             type="email"
-            autoComplete="email"
+            autoComplete={preventCredentialRetention ? "off" : "email"}
+            defaultValue=""
             required
           />
         </label>
@@ -266,9 +241,8 @@ export function AuthForm({
             <PasswordInput
               className="mt-2 h-12"
               name="password"
-              autoComplete={
-                mode === "signin" ? "current-password" : "new-password"
-              }
+              autoComplete={preventCredentialRetention || mode === "signup" ? "new-password" : "current-password"}
+              defaultValue=""
               minLength={8}
               required
             />
