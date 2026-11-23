@@ -78,6 +78,13 @@
       "when": 1795000000000,
       "tag": "0010_email_marketing_planner",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1795086400000,
+      "tag": "0011_donor_crm_planner",
+      "breakpoints": true
     }
   ]
 }
