@@ -50,6 +50,7 @@ export const sandboxPageGroups: SandboxPageGroup[] = [
     title: "Platform and Give Holidays",
     description: "Restricted operational tools for authorized administrators.",
     links: [
+      { label: "Module Planner", href: "/admin/module-planner", note: "Platform administrator access required." },
       { label: "Master travel catalog", href: "/admin/give-holidays" },
       { label: "Auction travel fulfillment", href: "/admin/give-holidays/fulfillments" },
       { label: "Direct-offer fulfillment", href: "/admin/give-holidays/direct-fulfillments" },

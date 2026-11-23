@@ -92,6 +92,7 @@ const sections: RoleSection[] = [
     icon: ShieldCheck,
     workflows: [
       { label: "Platform administration", href: "/admin" },
+      { label: "Module Planner", href: "/admin/module-planner" },
       { label: "Give Holidays administration", href: "/admin/give-holidays" },
       { label: "Email administration", href: "/admin/email-templates" },
       { label: "Security controls", href: "/admin/security" },
