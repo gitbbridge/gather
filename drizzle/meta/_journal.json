@@ -85,6 +85,13 @@
       "when": 1795086400000,
       "tag": "0011_donor_crm_planner",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1795587116912,
+      "tag": "0012_core_module_inventory",
+      "breakpoints": true
     }
   ]
 }
