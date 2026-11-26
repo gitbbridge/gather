@@ -346,8 +346,26 @@ export async function POST(request: Request) {
       return json({ id, url }, 201);
     }
 
+    if (action === "codeLink.review") {
+      const parsed = z.object({
+        linkId: plannerRecordId,
+        decision: z.enum(["Confirmed", "Rejected"]),
+        reason: z.string().trim().min(3).max(5000),
+      }).safeParse(input);
+      if (!parsed.success) return json({ error: "Choose a source-link decision and record the reason." }, 400);
+      const current = await db.prepare("SELECT * FROM planner_code_links WHERE id=?").bind(parsed.data.linkId).first<Record<string, unknown>>();
+      if (!current) return json({ error: "Source link not found." }, 404);
+      await db.prepare("UPDATE planner_code_links SET review_state=?,updated_at=? WHERE id=?").bind(parsed.data.decision, now, parsed.data.linkId).run();
+      await audit({
+        moduleId: String(current.module_id), actorId: user.userId, actorName: user.displayName,
+        action: "source.link.reviewed", previousValue: current,
+        newValue: { decision: parsed.data.decision, reason: parsed.data.reason },
+      });
+      return json({ reviewed: true });
+    }
+
     if (action === "codeLink.archive") {
-      const parsed = z.object({ linkId: z.string().uuid(), reason: z.string().trim().min(3).max(5000), restore: z.boolean().default(false) }).safeParse(input);
+      const parsed = z.object({ linkId: plannerRecordId, reason: z.string().trim().min(3).max(5000), restore: z.boolean().default(false) }).safeParse(input);
       if (!parsed.success) return json({ error: "Record a reason for this source-link change." }, 400);
       const current = await db.prepare("SELECT * FROM planner_code_links WHERE id=?").bind(parsed.data.linkId).first<Record<string, unknown>>();
       if (!current) return json({ error: "Source link not found." }, 404);
