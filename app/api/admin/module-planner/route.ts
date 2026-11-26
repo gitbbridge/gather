@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getAppUser } from "@/lib/auth";
 import {
   calculateProjectProgress,
+  isPlannerRecordId,
   MODULE_PRIORITIES,
   MODULE_STATUSES,
   PROGRESS_STAGES,
@@ -33,6 +34,7 @@ const statuses = [...MODULE_STATUSES] as [string, ...string[]];
 const priorities = [...MODULE_PRIORITIES] as [string, ...string[]];
 const risks = [...RISK_LEVELS] as [string, ...string[]];
 const stages = Object.keys(PROGRESS_STAGES) as [ProgressStage, ...ProgressStage[]];
+const plannerRecordId = z.string().trim().min(1).max(200).refine(isPlannerRecordId, "Invalid planner record identifier.");
 
 const moduleFields = {
   name: "name",
@@ -253,7 +255,7 @@ const createModule = z.object({
 });
 
 const createFeature = z.object({
-  moduleId: z.string().uuid(),
+  moduleId: plannerRecordId,
   name: z.string().trim().min(2).max(200),
   description: z.string().trim().max(50_000).default(""),
   functionalSpecification: z.string().trim().max(100_000).default(""),
@@ -262,12 +264,12 @@ const createFeature = z.object({
 });
 
 const updateModule = z.object({
-  moduleId: z.string().uuid(),
+  moduleId: plannerRecordId,
   changes: z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
 });
 
 const updateFeature = z.object({
-  featureId: z.string().uuid(),
+  featureId: plannerRecordId,
   changes: z.record(z.string(), z.union([z.string(), z.null()])),
 });
 
@@ -320,7 +322,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "github.activity.review") {
-      const parsed = z.object({ activityId: z.string().uuid(), moduleId: z.string().uuid().nullable(), decision: z.enum(["Confirmed", "Rejected"]), reason: z.string().trim().min(3).max(5000) }).safeParse(input);
+      const parsed = z.object({ activityId: z.string().uuid(), moduleId: plannerRecordId.nullable(), decision: z.enum(["Confirmed", "Rejected"]), reason: z.string().trim().min(3).max(5000) }).safeParse(input);
       if (!parsed.success) return json({ error: "Choose an association decision and record the reason." }, 400);
       const current = await db.prepare("SELECT * FROM planner_github_activities WHERE id=?").bind(parsed.data.activityId).first<Record<string, unknown>>();
       if (!current) return json({ error: "GitHub activity not found." }, 404);
@@ -332,7 +334,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "codeLink.create") {
-      const parsed = z.object({ moduleId: z.string().uuid(), linkType: z.enum(["file", "directory", "commit", "pull_request", "issue", "branch", "release"]), label: z.string().trim().min(2).max(200), reference: z.string().trim().min(1).max(1000) }).safeParse(input);
+      const parsed = z.object({ moduleId: plannerRecordId, linkType: z.enum(["file", "directory", "commit", "pull_request", "issue", "branch", "release"]), label: z.string().trim().min(2).max(200), reference: z.string().trim().min(1).max(1000) }).safeParse(input);
       if (!parsed.success) return json({ error: "Complete the source-code association." }, 400);
       const url = githubReferenceUrl(parsed.data.linkType, parsed.data.reference);
       if (!url) return json({ error: "That reference is not valid for the selected GitHub link type." }, 400);
@@ -390,7 +392,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "module.approve") {
-      const parsed = z.object({ moduleId: z.string().uuid() }).safeParse(input);
+      const parsed = z.object({ moduleId: plannerRecordId }).safeParse(input);
       if (!parsed.success) return json({ error: "Invalid module." }, 400);
       const current = await db.prepare("SELECT * FROM planner_modules WHERE id=?").bind(parsed.data.moduleId).first<Record<string, unknown>>();
       if (!current) return json({ error: "Module not found." }, 404);
@@ -403,7 +405,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "module.archive") {
-      const parsed = z.object({ moduleId: z.string().uuid(), restore: z.boolean().default(false) }).safeParse(input);
+      const parsed = z.object({ moduleId: plannerRecordId, restore: z.boolean().default(false) }).safeParse(input);
       if (!parsed.success) return json({ error: "Invalid module." }, 400);
       const archivedAt = parsed.data.restore ? null : now;
       await db.prepare("UPDATE planner_modules SET archived_at=?,updated_at=? WHERE id=?").bind(archivedAt, now, parsed.data.moduleId).run();
@@ -440,7 +442,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "feature.archive") {
-      const parsed = z.object({ featureId: z.string().uuid(), restore: z.boolean().default(false), reason: z.string().max(5000).default("") }).safeParse(input);
+      const parsed = z.object({ featureId: plannerRecordId, restore: z.boolean().default(false), reason: z.string().max(5000).default("") }).safeParse(input);
       if (!parsed.success) return json({ error: "Invalid feature." }, 400);
       const feature = await db.prepare("SELECT * FROM planner_features WHERE id=?").bind(parsed.data.featureId).first<Record<string, unknown>>();
       if (!feature) return json({ error: "Feature not found." }, 404);
@@ -460,7 +462,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "comment.create") {
-      const parsed = z.object({ moduleId: z.string().uuid(), text: z.string().trim().min(1).max(20_000) }).safeParse(input);
+      const parsed = z.object({ moduleId: plannerRecordId, text: z.string().trim().min(1).max(20_000) }).safeParse(input);
       if (!parsed.success) return json({ error: "Comment text is required." }, 400);
       const id = randomUUID();
       await db.prepare("INSERT INTO planner_comments (id,module_id,author_id,author_name,body,created_at) VALUES (?,?,?,?,?,?)").bind(id, parsed.data.moduleId, user.userId, user.displayName, parsed.data.text, now).run();
@@ -482,7 +484,7 @@ export async function POST(request: Request) {
 
     if (action === "proposal.create") {
       const parsed = z.object({
-        moduleId: z.string().uuid(), featureId: z.string().uuid().nullable().optional(),
+        moduleId: plannerRecordId, featureId: plannerRecordId.nullable().optional(),
         proposalType: z.enum(["module.field", "feature.field", "feature.archive"]),
         fieldName: z.string().max(80).nullable().optional(), proposedValue: z.string().max(100_000).nullable().optional(),
         reason: z.string().trim().min(3).max(20_000),
@@ -530,7 +532,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "dependencies.set") {
-      const parsed = z.object({ moduleId: z.string().uuid(), dependencyIds: z.array(z.string().uuid()).max(100) }).safeParse(input);
+      const parsed = z.object({ moduleId: plannerRecordId, dependencyIds: z.array(plannerRecordId).max(100) }).safeParse(input);
       if (!parsed.success) return json({ error: "Invalid dependencies." }, 400);
       const edges = await db.prepare("SELECT module_id AS moduleId,depends_on_module_id AS dependsOnModuleId FROM planner_dependencies").all<{ moduleId: string; dependsOnModuleId: string }>();
       if (wouldCreateDependencyCycle(parsed.data.moduleId, parsed.data.dependencyIds, edges.results))
@@ -546,8 +548,8 @@ export async function POST(request: Request) {
 
     if (action === "goal.save") {
       const parsed = z.object({
-        id: z.string().uuid().optional(), name: z.string().trim().min(3).max(200), description: z.string().max(50_000).default(""),
-        approvedScope: z.array(z.string().uuid()).default([]), completionCriteria: z.array(z.string().max(5000)).default([]),
+        id: plannerRecordId.optional(), name: z.string().trim().min(3).max(200), description: z.string().max(50_000).default(""),
+        approvedScope: z.array(plannerRecordId).default([]), completionCriteria: z.array(z.string().max(5000)).default([]),
         targetMilestones: z.array(z.string().max(5000)).default([]), approve: z.boolean().default(false),
       }).safeParse(input);
       if (!parsed.success) return json({ error: "Complete the project goal." }, 400);
@@ -567,7 +569,7 @@ export async function POST(request: Request) {
 
     if (action === "task.save") {
       const parsed = z.object({
-        id: z.string().uuid().optional(), goalId: z.string().uuid(), moduleId: z.string().uuid(), name: z.string().trim().min(2).max(300),
+        id: z.string().uuid().optional(), goalId: plannerRecordId, moduleId: plannerRecordId, name: z.string().trim().min(2).max(300),
         weight: z.number().refine((value) => TASK_WEIGHTS.includes(value as typeof TASK_WEIGHTS[number])), stage: z.enum(stages),
         baselineIncluded: z.boolean().default(false), approveWeight: z.boolean().default(false),
         requirementsEvidence: z.string().max(20_000).nullable().optional(), implementationEvidence: z.string().max(20_000).nullable().optional(),

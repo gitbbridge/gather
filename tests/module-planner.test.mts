@@ -3,9 +3,19 @@ import assert from "node:assert/strict";
 import {
   calculateProjectProgress,
   implementationBrief,
+  isPlannerRecordId,
   verifiedTaskCompletion,
   wouldCreateDependencyCycle,
 } from "../lib/module-planner.ts";
+
+test("planner record identifiers support stable migration IDs and UUIDs", () => {
+  assert.equal(isPlannerRecordId("module-auction-bidding"), true);
+  assert.equal(isPlannerRecordId("crm-feature-contacts"), true);
+  assert.equal(isPlannerRecordId("550e8400-e29b-41d4-a716-446655440000"), true);
+  assert.equal(isPlannerRecordId("../../unsafe"), false);
+  assert.equal(isPlannerRecordId("contains spaces"), false);
+  assert.equal(isPlannerRecordId(""), false);
+});
 
 test("progress cannot advance beyond the last stage with complete evidence", () => {
   const result = verifiedTaskCompletion({

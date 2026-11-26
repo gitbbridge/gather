@@ -13,6 +13,15 @@ export const APPROVAL_STATES = ["Draft", "Pending", "Approved", "Rejected"] as c
 export const RISK_LEVELS = ["Low", "Medium", "High", "Critical"] as const;
 export const TASK_WEIGHTS = [1, 2, 3, 5, 8] as const;
 
+// Administrator-created records use UUIDs, while forward-only migrations use
+// readable stable IDs such as `module-auction-bidding`. Both are intentional
+// database identifiers and must remain addressable through the planner API.
+export const PLANNER_RECORD_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/;
+
+export function isPlannerRecordId(value: string) {
+  return value.length <= 200 && PLANNER_RECORD_ID_PATTERN.test(value);
+}
+
 export const PROGRESS_STAGES = {
   "Not started": 0,
   "Requirements approved": 0.15,
