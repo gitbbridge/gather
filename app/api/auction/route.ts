@@ -151,7 +151,7 @@ function validationIssues(error: z.ZodError): ValidationIssue[] {
     const label = itemIndex ? `Item ${itemIndex} ${({ title: "name", value: "fair market value", image: "image URL", start: "starting bid", increment: "bid increment", buyNow: "Buy Now price", taxRateBps: "tax rate" } as Record<string, string>)[itemField] || itemField}` : labels[root] || root.replace(/([A-Z])/g, " $1").replace(/^./, letter => letter.toUpperCase());
     let message = `${label}: ${issue.message}`;
     if ((itemField === "start" || itemField === "increment" || root === "value") && issue.code === "too_small") message = `${label} must be at least $1.00.`;
-    else if ((root === "brandLogoUrl" || root === "brandBannerUrl" || itemField === "image") && issue.code === "invalid_format") message = `${label} must be a complete HTTPS image address.`;
+    else if (root === "brandLogoUrl" || root === "brandBannerUrl" || itemField === "image") message = `${label} must be a complete HTTPS image address.`;
     else if (root === "organizationContactEmail") message = "Enter a valid organization contact email, or leave it blank.";
     else if (root === "nonprofitSlug") message = "The shareable event link must be 3–48 characters using lowercase letters, numbers, and single hyphens.";
     else if (itemField === "title") message = `${label} is required.`;

@@ -107,8 +107,7 @@ async function upsertD1Organization(input: {
   await db.prepare("UPDATE nonprofits SET owner=?,slug=?,name=?,headline=?,mission=?,accent=? WHERE id=?")
     .bind(input.owner, input.slug, input.name, input.headline, input.mission, input.accent, input.id).run();
   const nonprofit: Nonprofit = { id: input.id, owner: input.owner, slug: input.slug, name: input.name, headline: input.headline, mission: input.mission, accent: input.accent };
-  const homepage = defaultHomepage(publicNonprofit(nonprofit), input.auctions.map(({ id, state }) => ({ id, name: state.name, starts: state.starts, ends: state.ends })));
-  homepage.theme.primary = input.accent;
+  const homepage = defaultHomepage(publicNonprofit(nonprofit), input.auctions);
   await db.prepare("INSERT INTO nonprofit_homepages (nonprofit_id,draft,published,draft_version,updated_at,published_at) VALUES (?,?,?,?,?,?) ON CONFLICT(nonprofit_id) DO UPDATE SET draft=excluded.draft,published=excluded.published,updated_at=excluded.updated_at,published_at=excluded.published_at")
     .bind(input.id, JSON.stringify(homepage), JSON.stringify(homepage), 1, Date.now(), Date.now()).run();
   for (const { id, state } of input.auctions) {

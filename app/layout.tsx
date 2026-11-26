@@ -53,9 +53,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Search Atlas requires this exact synchronous head script. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
-          nowprocket=""
-          nitro-exclude=""
+          {...{ nowprocket: "", "nitro-exclude": "" }}
           type="text/javascript"
           id="sa-dynamic-optimization"
           data-uuid="6492bd64-5a1b-4f1e-a353-0076a6c22975"
